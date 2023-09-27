@@ -1,0 +1,16 @@
+name: win-docker
+
+on:
+  workflow_dispatch:
+
+
+jobs:
+  win-setup:
+    runs-on: windows-2019
+    
+    steps:
+      - name: Check Hyper-V
+        run: |
+          Get-WindowsOptionalFeature -Online -FeatureName Microsoft-Hyper-V
+          docker version
+          docker images
