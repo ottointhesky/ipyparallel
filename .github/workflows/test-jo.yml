@@ -25,6 +25,8 @@ jobs:
 
       - name: Compose win-sshd docker containter
         run: |
+          $env:DOCKER_BUILDKIT=1
+          $env:COMPOSE_DOCKER_CLI_BUILD=1
           cd ci/ssh-win
           docker compose up -d --build
           # docker ps
