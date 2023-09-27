@@ -34,5 +34,5 @@ jobs:
 
       - name: Test ssh connection
         run: |        
-          ssh ciuser@localhost -p 2222 -v whoami
+          ssh -o "StrictHostKeyChecking no" ciuser@localhost -p 2222 -v whoami
           
