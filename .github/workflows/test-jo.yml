@@ -9,8 +9,32 @@ jobs:
     runs-on: windows-2019
     
     steps:
-      - name: Check Hyper-V
+      - uses: actions/checkout@v3
+      
+      #- name: Check Hyper-V
+      #  run: |
+      #    Get-WindowsOptionalFeature -Online -FeatureName Microsoft-Hyper-V
+      #    docker version
+      #    docker images
+      # 
+      #- name: Check Docker
+      #  run: |
+      #    pwd
+      #    dir *
+      #    (get-command docker).Path
+
+      - name: Compose win-sshd docker containter
         run: |
-          Get-WindowsOptionalFeature -Online -FeatureName Microsoft-Hyper-V
-          docker version
-          docker images
+          $env:DOCKER_BUILDKIT=1
+          $env:COMPOSE_DOCKER_CLI_BUILD=1
+          cd ci/ssh-win
+          docker compose up -d --build
+          # docker ps
+          mkdir $env:USERPROFILE/.ssh/
+          docker run ipyparallel-sshd powershell.exe -Command "type C:\Users\ciuser\.ssh\id_rsa" | out-file -encoding ascii $env:USERPROFILE/.ssh/id_rsa
+          echo $env:USERPROFILE/.ssh/id_rsa
+
+      - name: Test ssh connection
+        run: |        
+          ssh -o "StrictHostKeyChecking no" ciuser@localhost -p 2222 -v whoami
+          
