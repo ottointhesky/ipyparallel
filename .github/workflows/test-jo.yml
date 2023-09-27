@@ -34,7 +34,9 @@ jobs:
           docker run ipyparallel-sshd powershell.exe -Command "type C:\Users\ciuser\.ssh\id_rsa" | out-file -encoding ascii $env:USERPROFILE/.ssh/id_rsa
           echo $env:USERPROFILE/.ssh/id_rsa
 
-      - name: Test ssh connection
-        run: |        
-          ssh -o "StrictHostKeyChecking no" ciuser@localhost -p 2222 -v whoami
+      - name: ssh connection and copy files
+        run: |
+          ssh -o "StrictHostKeyChecking no" ciuser@localhost -p 2222 -v mkdir c:/src
+          scp -rp -P 2222 . ciuser@localhost:c:/src
+          ssh ciuser@localhost -p 2222 -v dir c:/src/*
           
