@@ -30,6 +30,7 @@ jobs:
           # docker ps
           mkdir $env:USERPROFILE/.ssh/
           docker run ipyparallel-sshd powershell.exe -Command "type C:\Users\ciuser\.ssh\id_rsa" | out-file -encoding ascii $env:USERPROFILE/.ssh/id_rsa
+          echo $env:USERPROFILE/.ssh/id_rsa
 
       - name: Test ssh connection
         run: |        
