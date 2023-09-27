@@ -16,9 +16,17 @@ jobs:
           Get-WindowsOptionalFeature -Online -FeatureName Microsoft-Hyper-V
           docker version
           docker images
+      
+      - name: Check Docker
+        run: |
+          pwd
           dir *
-          cd ci/ssh
-          docker-compose up -d --build
+          (get-command docker).Path
+
+      - name: Compose sshd
+        run: |
+          cd ci/ssh-win
+          docker compose up -d --build
           docker ps
           docker run ipyparallel-sshd powershell.exe -Command "type C:\Users\ciuser\.ssh\id_rsa" | out-file -encoding ascii $env:USERPROFILE/.ssh/id_rsa
           ssh ciuser@localhost -p 2222 -v whoami
