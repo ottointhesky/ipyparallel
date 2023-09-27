@@ -11,23 +11,27 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       
-      - name: Check Hyper-V
-        run: |
-          Get-WindowsOptionalFeature -Online -FeatureName Microsoft-Hyper-V
-          docker version
-          docker images
-      
-      - name: Check Docker
-        run: |
-          pwd
-          dir *
-          (get-command docker).Path
+      #- name: Check Hyper-V
+      #  run: |
+      #    Get-WindowsOptionalFeature -Online -FeatureName Microsoft-Hyper-V
+      #    docker version
+      #    docker images
+      # 
+      #- name: Check Docker
+      #  run: |
+      #    pwd
+      #    dir *
+      #    (get-command docker).Path
 
-      - name: Compose sshd
+      - name: Compose win-sshd docker containter
         run: |
           cd ci/ssh-win
           docker compose up -d --build
-          docker ps
+          # docker ps
+          mkdir $env:USERPROFILE/.ssh/
           docker run ipyparallel-sshd powershell.exe -Command "type C:\Users\ciuser\.ssh\id_rsa" | out-file -encoding ascii $env:USERPROFILE/.ssh/id_rsa
+
+      - name: Test ssh connection
+        run: |        
           ssh ciuser@localhost -p 2222 -v whoami
           
