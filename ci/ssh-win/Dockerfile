@@ -46,7 +46,7 @@ RUN Write-Host 'Restart wuauserv service...'; \
 	Start-Service -name wuauserv; \
 	Write-Host 'Install OpenSSH Server...'; \
 	Add-WindowsCapability -Online -Name OpenSSH.Server~~~~0.0.1.0; \
-	Write-Host 'Initializing OpenSSH Server...'
+	Write-Host 'Initializing OpenSSH Server...'; \
 	Start-Service sshd; \
 	Stop-Service sshd
 
