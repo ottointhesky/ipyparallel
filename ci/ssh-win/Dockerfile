@@ -7,12 +7,33 @@ ENV PYTHON_RELEASE 3.8.10
 
 # RUN --mount=type=bind,source=D:/swdvlp64_cmake/external/ipyparallel,target=C:/src/ipyparallel
 
+#download and install latest node js version
+RUN $baseurl = 'https://nodejs.org/dist/latest/'; \
+	$line = Invoke-WebRequest -UseBasicParsing -Uri $baseurl | Select-Object -ExpandProperty Content | ForEach-Object { $_.Split(\"`r`n\") } | Select-String -Pattern '-x64.msi'; \
+	$filename = ($line -split '>' -split '<')[2]; \
+	Write-Host ('Latest node.js installer {0}' -f $filename); \
+	$url = ('{0}{1}' -f $baseurl, $filename); \
+	Write-Host ('Downloading {0} ...' -f $url); \
+	[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; \
+	Invoke-WebRequest -Uri $url -OutFile 'node.msi'; \
+	\
+	Write-Host 'Installing Node.js...'; \
+	Start-Process msiexec.exe -Wait -ArgumentList '/I node.msi /quiet'; \
+	\
+#the installer updated PATH, so we should refresh our local value
+	$env:PATH = [Environment]::GetEnvironmentVariable('PATH', [EnvironmentVariableTarget]::Machine); \
+	\
+	Write-Host 'Verifying install ...'; \
+	Write-Host '  node --version'; node --version; \
+	Write-Host 'Complete.'
+
+#download and install python
 RUN $url = ('https://www.python.org/ftp/python/{0}/python-{1}-amd64.exe' -f $env:PYTHON_RELEASE, $env:PYTHON_VERSION); \
 	Write-Host ('Downloading {0} ...' -f $url); \
 	[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; \
 	Invoke-WebRequest -Uri $url -OutFile 'python.exe'; \
 	\
-	Write-Host 'Installing ...'; \
+	Write-Host 'Installing python...'; \
 # https://docs.python.org/3.8/using/windows.html#installing-without-ui
 	Start-Process python.exe -Wait \
 		-ArgumentList @( \
