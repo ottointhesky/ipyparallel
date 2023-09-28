@@ -11,30 +11,26 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       
-      #- name: Check Hyper-V
+      #- name: Check Hyper-V and Docker
       #  run: |
       #    Get-WindowsOptionalFeature -Online -FeatureName Microsoft-Hyper-V
       #    docker version
       #    docker images
-      # 
-      #- name: Check Docker
-      #  run: |
-      #    pwd
-      #    dir *
-      #    (get-command docker).Path
 
       - name: Compose win-sshd docker containter
         run: |
+          # compose docker container
           cd ci/ssh-win
           docker compose up -d --build
-          # docker ps
+          
+          # retrieve id_rsa file for public key authentication
           mkdir $env:USERPROFILE/.ssh/
           docker run ipyparallel-sshd powershell.exe -Command "type C:\Users\ciuser\.ssh\id_rsa" | out-file -encoding ascii $env:USERPROFILE/.ssh/id_rsa
-          echo $env:USERPROFILE/.ssh/id_rsa
 
       - name: ssh connection and copy files
         run: |
-          # make first connection to docker container (requires StrictHostKeyChecking set to no )
+          # make first ssh connection to docker container (requires StrictHostKeyChecking set to no ) and create dir
+          # verbose: remove -v parameter for less output messages
           ssh -o "StrictHostKeyChecking no" ciuser@localhost -p 2222 -v mkdir c:\src\ipyparallel
           
           # zip ipyparallel files 
@@ -48,5 +44,10 @@ jobs:
           # deflate ipyparallel files
           ssh ciuser@localhost -p 2222 powershell.exe Expand-Archive -Path c:\src\ipyparallel\ipyparallel.zip -DestinationPath c:\src\ipyparallel
 
-          # check content of ipyparallel
-          ssh ciuser@localhost -p 2222 dir c:\src\ipyparallel\
+          # pip install ipyparallel files
+          ssh ciuser@localhost -p 2222 cd c:\src\ipyparallel && pip install -e .
+
+      - name: test ipyparallel
+        run: |
+          # send test command
+          ssh ciuser@localhost -p 2222 ipcluster
