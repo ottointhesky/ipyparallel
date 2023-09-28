@@ -42,9 +42,10 @@ jobs:
           scp -P 2222 ipyparallel.zip ciuser@localhost:c:\src\ipyparallel
           
           # deflate ipyparallel files
-          ssh ciuser@localhost -p 2222 powershell.exe Expand-Archive -Path c:\src\ipyparallel\ipyparallel.zip -DestinationPath c:\src\ipyparallel
+          ssh ciuser@localhost -p 2222 powershell.exe -Command "Expand-Archive -Path c:\src\ipyparallel\ipyparallel.zip -DestinationPath c:\src\ipyparallel"
 
           # pip install ipyparallel files
+          ssh ciuser@localhost -p 2222 dir c:\src\ipyparallel
           ssh ciuser@localhost -p 2222 "cd c:\src\ipyparallel && pip install -e ."
 
       - name: test ipyparallel
