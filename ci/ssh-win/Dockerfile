@@ -25,6 +25,10 @@ RUN $baseurl = 'https://nodejs.org/dist/latest/'; \
 	\
 	Write-Host 'Verifying install ...'; \
 	Write-Host '  node --version'; node --version; \
+	\
+	Write-Host 'Removing setup file...'; \
+	Remove-Item node.msi -Force; \
+	\
 	Write-Host 'Complete.'
 
 #download and install python
