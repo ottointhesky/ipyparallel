@@ -45,9 +45,12 @@ jobs:
           ssh ciuser@localhost -p 2222 powershell.exe Expand-Archive -Path c:\src\ipyparallel\ipyparallel.zip -DestinationPath c:\src\ipyparallel
 
           # pip install ipyparallel files
-          ssh ciuser@localhost -p 2222 cd c:\src\ipyparallel && pip install -e .
+          ssh ciuser@localhost -p 2222 "cd c:\src\ipyparallel && pip install -e ."
 
       - name: test ipyparallel
         run: |
+          # check environment
+          ssh ciuser@localhost -p 2222 pip freeze
+          
           # send test command
           ssh ciuser@localhost -p 2222 ipcluster
