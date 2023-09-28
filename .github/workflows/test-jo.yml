@@ -34,7 +34,19 @@ jobs:
 
       - name: ssh connection and copy files
         run: |
-          ssh -o "StrictHostKeyChecking no" ciuser@localhost -p 2222 -v mkdir c:/src
-          scp -rp -P 2222 . ciuser@localhost:c:/src
-          ssh ciuser@localhost -p 2222 -v dir c:/src/*
+          # make first connection to docker container (requires StrictHostKeyChecking set to no )
+          ssh -o "StrictHostKeyChecking no" ciuser@localhost -p 2222 -v mkdir c:\src\ipyparallel
           
+          # zip ipyparallel files 
+          $exclude = @("__pycache__","node_modules")
+          $files = Get-ChildItem -Path "ipyparallel" -Exclude $exclude
+          Compress-Archive -Path $files -DestinationPath ipyparallel.zip -CompressionLevel Fastest
+
+          # copy file into docker (we need to do it over ssh since docker copy or mount doesn't work in Hyper-V)
+          scp -P 2222 ipyparallel.zip ciuser@localhost:c:\src\ipyparallel
+          
+          # deflate ipyparallel files
+          ssh ciuser@localhost -p 2222 powershell.exe Expand-Archive -Path c:\src\ipyparallel\ipyparallel.zip -DestinationPath c:\src\ipyparallel
+
+          # check content of ipyparallel
+          ssh ciuser@localhost -p 2222 dir c:\src\ipyparallel\
