@@ -33,9 +33,9 @@ jobs:
           # verbose: remove -v parameter for less output messages
           ssh -o "StrictHostKeyChecking no" ciuser@localhost -p 2222 -v mkdir c:\src\ipyparallel
           
-          # zip ipyparallel files 
+          # zip ipyparallel files (excluding file might not be needed)
           $exclude = @("__pycache__","node_modules")
-          $files = Get-ChildItem -Path "ipyparallel" -Exclude $exclude
+          $files = Get-ChildItem -Path "." -Exclude $exclude
           Compress-Archive -Path $files -DestinationPath ipyparallel.zip -CompressionLevel Fastest
 
           # copy file into docker (we need to do it over ssh since docker copy or mount doesn't work in Hyper-V)
