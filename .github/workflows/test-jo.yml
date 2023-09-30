@@ -54,4 +54,4 @@ jobs:
           ssh ciuser@localhost -p 2222 pip freeze
           
           # send test command
-          ssh ciuser@localhost -p 2222 ipcluster
+          ssh ciuser@localhost -p 2222 ipcluster -h
