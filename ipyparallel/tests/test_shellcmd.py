@@ -4,7 +4,7 @@ from collections import namedtuple
 
 import pytest
 import sys, os
-import time
+import time, signal
 
 from ipyparallel.cluster import shellcmd
 
@@ -12,9 +12,13 @@ from ipyparallel.cluster import shellcmd
 def setup_shellcmd_senders():
     senders = []
     if os.name == 'nt':
-        cmd = shellcmd.ShellCommandSend(["cmd.exe"], ["/C"], sys.executable, use_code_sending=1)
+        cmd = shellcmd.ShellCommandSend(["cmd.exe"], ["/C"], sys.executable)
+        cmd_cs = shellcmd.ShellCommandSend(["cmd.exe"], ["/C"], sys.executable, use_code_sending=1)
         ps = shellcmd.ShellCommandSend(["powershell.exe"], ["-Command"], sys.executable)
-        senders = [ps] #, cmd ps]
+        ps_cs = shellcmd.ShellCommandSend(["powershell.exe"], ["-Command"], sys.executable, use_code_sending=1)
+        ssh = shellcmd.ShellCommandSend(["ssh"], ["-p", "2222", "ciuser@localhost"], "python", use_code_sending=1)
+        bash = shellcmd.ShellCommandSend(["bash"], ["-c"], "python3", use_code_sending=1)
+        senders = [bash] #, cmd ps]
     return senders
 
 @pytest.fixture
@@ -37,16 +41,16 @@ def test_all_shellcmds(setup_shellcmd_senders, shellcmd_test_cmd):
         assert python_ok==True
 
         test_dir = "shellcmd_test"
-        test_script = "testfile.txt"
+        test_file = "testfile.txt"
 
         # perform basic file/directory operations
         sender.cmd_mkdir(test_dir)
         assert sender.cmd_exists(test_dir) is True  # make sure that test_dir was created
 
         # create a simple text file with one line
-        fullpath = os.path.join(test_dir,test_script)
-        with open(fullpath, "w") as f:
-            f.write("test line\n")
+        fullpath = test_dir+'/'+test_file
+        #sender.check_output_python(['-c', f'f=open("{fullpath}","w");f.write("test-line\n")'])
+        sender.check_output(f'echo "test-line" > {fullpath}')
 
         assert sender.cmd_exists(fullpath) is True  # make sure that test file was created
 
@@ -63,7 +67,7 @@ def test_all_shellcmds(setup_shellcmd_senders, shellcmd_test_cmd):
         assert sender.cmd_running(pid) is True  # make sure that process with pid is running
 
         #time.sleep(7)  # ping should run for 5 seconds
-        sender.cmd_kill(pid)
+        sender.cmd_kill(pid, signal.SIGTERM)
 
         assert sender.cmd_running(pid) is False  # make sure that process with pid is not running any more
         assert sender.cmd_exists(redirect_output_file) is True  # make sure that output file was created
