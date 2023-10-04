@@ -30,9 +30,32 @@ class ShellCommandReceive:
     is written to stdout in the following form: __<key>=<value>__
     """
     def __init__(self):
+        self.debugging = False
         pass
 
     def cmd_start(self, start_cmd, env=None, output_file=None):
+        if env:
+            # add provided entries to environment
+            if isinstance(env,str):
+                env_dict = eval(env)
+                assert(isinstance(env_dict, dict) is True)
+                env = env_dict
+
+            assert(isinstance(env, dict) is True)   # make sure that env is a dictionary
+
+            # update environment
+            for key, value in env.items():
+                if value is not None and value != '':
+                    os.environ[key] = str(value)
+                else:
+                    # unset entry if needed
+                    if key in os.environ:
+                        del os.environ[key]
+
+        if self.debugging:
+            with open("start_cmd.txt", "w") as f:
+                f.write(start_cmd)
+
         if os.name == "nt":
             from subprocess import Popen
             from subprocess import CREATE_NEW_CONSOLE
@@ -147,14 +170,16 @@ class ShellCommandSend:
     package_name = "ipyparallel.cluster.shellcmd"    # package name for send the command
     output_template = re.compile(r"__([a-z][a-z0-9_]+)=([a-z0-9\-\.]+)__", re.IGNORECASE)
     receiver_code = inspect.getsource(ShellCommandReceive)
+    _python_chars_map =  str.maketrans( {"\\": "\\\\", "'": "\\'"} )
 
     def __init__(self, shell, args, python_path, use_code_sending = False):
         self.shell = shell
         self.args = args
         self.python_path = python_path
         self.is_linux = None    # changed if get_remote_shell_info is called
-        self.requires_quoting = True
+        self.is_powershell = None
         self.use_code_sending = use_code_sending    # should be activated when developing...
+        self.debugging = False  # for outputs to file for easier debugging
 
     def _check_output(self, cmd):
         return check_output(cmd).decode('utf8', 'replace')
@@ -174,12 +199,51 @@ class ShellCommandSend:
         else:
             raise Exception("Unknown command type")
 
+    def _format_for_python(self, param):
+        assert(isinstance(param, str) is True)
+        if param.isnumeric():
+            return param
+        else:
+            return f"'{param.translate(self._python_chars_map)}'"
+
+    def _powershell_quote(self,param):
+        if '"' in param or "'" in param or " " in param:
+            # we need to replace single and double quotes be two double quotes, but if we are inside a string,
+            # we need to prepend a backslash to the double quote. Otherwise it will get removed
+            quoted = ""
+            in_string = False
+            for idx, c in enumerate(param):
+                prev_c = None if idx == 0 else param[idx-1]
+                next_c = None if idx == len(param)-1 else param[idx+1]
+                if c == '"' and prev_c != "\\":
+                    in_string = not in_string
+                    quoted += '"'*2
+                    continue
+                if c == "'":
+                    if in_string:
+                        quoted += '\\"'*2
+                    else:
+                        quoted += '"'*2
+                    continue
+                quoted += c
+            return "'"+quoted+"'"
+        else:
+            return param
+
     def _send_cmd(self, paramlist):
         if not self.use_code_sending:
             # send command through the corresponding package call
-            if self.requires_quoting:
-                paramlist = [ shlex.quote(p) for p in paramlist ]
+            if self.is_linux:
+                paramlist = [shlex.quote(p) for p in paramlist]
+            elif self.is_powershell:
+                paramlist = [self._powershell_quote(p) for p in paramlist]
             cmd = self.shell + self.args + [self.python_path, "-m", self.package_name] + paramlist
+
+            if self.debugging:
+                with open("send_cmd.txt", "w") as f:
+                    for idx, c in enumerate(cmd):
+                        f.write(f"{idx}:{c}$\n")
+
             return self._check_output(cmd)
         else:
             # in code sending mode it is not required that the ipyparallel.cluster.shellcmd
@@ -195,16 +259,10 @@ class ShellCommandSend:
                 if idx > 1:
                     py_cmd += ", "
                 if paramlist[idx][0:2] == "--":
-                    if paramlist[idx+1].isnumeric():
-                        py_cmd += f"{paramlist[idx][2:]}={paramlist[idx+1]}"
-                    else:
-                        py_cmd += f"{paramlist[idx][2:]}=r'{paramlist[idx+1]}'"
+                    py_cmd += f"{paramlist[idx][2:]}={self._format_for_python(paramlist[idx+1])}"
                     skip = True
                 else:
-                    if paramlist[idx].isnumeric():
-                        py_cmd += f"{paramlist[idx]}"
-                    else:
-                        py_cmd += f"r'{paramlist[idx]}'"
+                    py_cmd += self._format_for_python(paramlist[idx])
             py_cmd += ")\n"
             cmd = self.shell + self.args + [self.python_path]
             return check_output(cmd, universal_newlines=True, input=py_cmd)
@@ -237,14 +295,16 @@ class ShellCommandSend:
             if key == "OS-WIN-CMD":
                 system = val
                 shell = "cmd.exe"
-                self.requires_quoting = False
+                self.is_powershell = False
                 self.is_linux = False
             elif key == "OS-WIN-PW":
                 system = val
                 shell = "powershell.exe"
+                self.is_powershell = True
                 self.is_linux = False
             elif key == "OS-LINUX":
                 system = val
+                self.is_powershell = False
                 self.is_linux = True
             elif key == "SHELL":
                 shell = val
@@ -332,9 +392,16 @@ class ShellCommandSend:
         """delete remote file"""
         output = self._send_cmd(["remove", p])
 
-
+#d = {}
+#d["IPP_CLUSTER_ID"] = ""
+#d["IPP_PROFILE_DIR"] = r"C:\Users\jo\.ipython\profile_ssh"
+#d["IPP_CONNECTION_INFO"] = {"ssh": "", "interface": "tcp://*", "registration": 60691, "control": 60692, "mux": 60693, "task": 60694, "iopub": 60695, "hb_ping": 60696, "hb_pong": 60697, "broadcast": [60698, 60699], "key": "169b682b-337c645951e7d47723061090", "curve_serverkey": "null", "location": "dvlp1", "pack": "json", "unpack": "json", "signature_scheme": "hmac-sha256"}
+#print(d)
 
 def main():
+    #with open("sys_arg.txt", "w") as f:
+    #    for idx, arg in enumerate(sys.argv):
+    #        f.write(f"{idx}:{arg}$\n")
     parser = ArgumentParser(description='Perform some standard shell command in a platform independent way')
     subparsers = parser.add_subparsers(dest='cmd', help='sub-command help')
 
