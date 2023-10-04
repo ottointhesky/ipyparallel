@@ -111,7 +111,6 @@ def test_all_shellcmds(setup_shellcmd_senders, shellcmd_test_cmd):
         if prefix:
             output_file = prefix + output_file
         pid = sender.cmd_start(f'{sender.python_path} -c "{python_cmd}"', env=env_dict, output_file=output_file)
-        #pid = sender.cmd_start(f'{sender.python_path} -c ""print(\\"\\"hallo4\\"\\")""', output_file=output_file) #env=env_dict, output_file=output_file)
 
         time.sleep(1)   #sleep for 1 second to make sure that command has finished
         assert sender.cmd_running(pid) is False
