@@ -80,11 +80,14 @@ jobs:
           # retrieve id_rsa file for public key authentication
           mkdir ~/.ssh/
           docker cp ssh_sshd_1:/home/ciuser/.ssh/id_rsa ~/.ssh/id_rsa
-          docker cp ipyparallel-sshd:/home/ciuser/.ssh/id_rsa ~/.ssh/id_rsa2
+          #docker cp ipyparallel-sshd:/home/ciuser/.ssh/id_rsa ~/.ssh/id_rsa2
           
           # just for checking if ssh key was copired
           ls ~/.ssh/*
           cat ~/.ssh/id_rsa
+          
+          #check ssh connection
+          ssh -o "StrictHostKeyChecking no" ciuser@localhost -p 2222 -v ls /
 
       - name: Set up docker-compose for ssh windows launcher
         if: ${{ matrix.cluster_type == 'ssh' && contains(matrix.runs_on, 'windows') }}
@@ -95,7 +98,10 @@ jobs:
           # retrieve id_rsa file for public key authentication
           mkdir $env:USERPROFILE/.ssh/
           docker run ipyparallel-sshd powershell.exe -Command "type C:\Users\ciuser\.ssh\id_rsa" | out-file -encoding ascii $env:USERPROFILE/.ssh/id_rsa
-
+          
+          #check ssh connection
+          ssh -o "StrictHostKeyChecking no" ciuser@localhost -p 2222 -v ls /
+          
       - name: Set up slurm
         if: ${{ matrix.cluster_type == 'slurm' }}
         run: |
