@@ -103,7 +103,6 @@ jobs:
           ssh -o "StrictHostKeyChecking no" $env:SSH_HOST -p $env:SSH_PORT -v dir c:\
           
           # copy ipyparallel code to docker container (use zip, scp and unzip)
-          echo "ssh $env:SSH_HOST -p $env:SSH_PORT mkdir $env:CODE_ROOT"
           ssh $env:SSH_HOST -p $env:SSH_PORT mkdir $env:CODE_ROOT
           
           # zip ipyparallel files (excluding files probably not needed)
