@@ -88,7 +88,7 @@ jobs:
       - name: Set up docker-compose for ssh windows launcher
         if: ${{ matrix.cluster_type == 'ssh' && contains(matrix.runs_on, 'windows') }}
         run: |
-          cd ci/ssh-win
+          cd ci/ssh
           docker-compose -f win_docker-compose.yaml up -d --build
           
           # retrieve id_rsa file for public key authentication
