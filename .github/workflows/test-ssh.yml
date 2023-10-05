@@ -110,9 +110,9 @@ jobs:
           $files = Get-ChildItem -Path "." -Exclude $exclude
           Compress-Archive -Path $files -DestinationPath ipyparallel.zip -CompressionLevel Fastest
           # copy file into docker (we need to do it over ssh since docker copy or mount doesn't work in Hyper-V)
-          scp -P $ssh_port ipyparallel.zip $ssh_host:$code_root
+          scp -P $ssh_port ipyparallel.zip ${ssh_host}:${code_root}
           # deflate ipyparallel files
-          ssh $ssh_host -p $ssh_port powershell.exe -Command "Expand-Archive -Path $code_root\ipyparallel.zip -DestinationPath $code_root"
+          ssh $ssh_host -p $ssh_port powershell.exe -Command "Expand-Archive -Path ${code_root}\ipyparallel.zip -DestinationPath $code_root"
           
           # pip install ipyparallel files
           ssh $ssh_host -p $ssh_port dir $code_root
