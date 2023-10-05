@@ -103,13 +103,18 @@ jobs:
           ssh -o "StrictHostKeyChecking no" $env:SSH_HOST -p $env:SSH_PORT -v ls c:\
           
           # copy ipyparallel code to docker container (use zip, scp and unzip)
+          echo "ssh $env:SSH_HOST -p $env:SSH_PORT mkdir $env:CODE_ROOT"
           ssh $env:SSH_HOST -p $env:SSH_PORT mkdir $env:CODE_ROOT
           # zip ipyparallel files (excluding file might not be needed)
+          pwd
           cd ../..
+          pwd
+          ls
           $exclude = @("__pycache__","node_modules")
           $files = Get-ChildItem -Path "." -Exclude $exclude
           Compress-Archive -Path $files -DestinationPath ipyparallel.zip -CompressionLevel Fastest
           # copy file into docker (we need to do it over ssh since docker copy or mount doesn't work in Hyper-V)
+          echo "scp -P $env:SSH_PORT ipyparallel.zip $env:SSH_HOST:$env:CODE_ROOT"
           scp -P $env:SSH_PORT ipyparallel.zip $env:SSH_HOST:$env:CODE_ROOT
           # deflate ipyparallel files
           ssh $env:SSH_HOST -p $env:SSH_PORT powershell.exe -Command "Expand-Archive -Path $env:CODE_ROOT\ipyparallel.zip -DestinationPath $env:CODE_ROOT"
