@@ -70,7 +70,7 @@ jobs:
           EOF
 
       - name: Set up docker-compose for ssh linux launcher
-        if: ${{ matrix.cluster_type == 'ssh' && !contains('windows', matrix.runs_on) }}
+        if: ${{ matrix.cluster_type == 'ssh' && !contains(runs_on, 'windows') }}
         run: |
           export DOCKER_BUILDKIT=1
           export COMPOSE_DOCKER_CLI_BUILD=1
@@ -78,7 +78,7 @@ jobs:
           docker-compose up -d --build
 
       - name: Set up docker-compose for ssh windows launcher
-        if: ${{ matrix.cluster_type == 'ssh' && contains('windows', matrix.runs_on) }}
+        if: ${{ matrix.cluster_type == 'ssh' && contains(runs_on, 'windows') }}
         run: |
           cd ci/ssh-win
           docker-compose up -d --build
