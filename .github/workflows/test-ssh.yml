@@ -75,32 +75,44 @@ jobs:
           export DOCKER_BUILDKIT=1
           export COMPOSE_DOCKER_CLI_BUILD=1
           cd ci/ssh
-          docker-compose up -d --build
+          docker-compose -f liunx_Dockerfile up -d --build
           
           # retrieve id_rsa file for public key authentication
           mkdir ~/.ssh/
           docker cp ssh_sshd_1:/home/ciuser/.ssh/id_rsa ~/.ssh/id_rsa
-          #docker cp ipyparallel-sshd:/home/ciuser/.ssh/id_rsa ~/.ssh/id_rsa2
-          
-          # just for checking if ssh key was copired
-          ls ~/.ssh/*
           cat ~/.ssh/id_rsa
           
-          #check ssh connection
+          #check ssh connection and accept host key
           ssh -o "StrictHostKeyChecking no" ciuser@localhost -p 2222 -v ls /
 
       - name: Set up docker-compose for ssh windows launcher
         if: ${{ matrix.cluster_type == 'ssh' && contains(matrix.runs_on, 'windows') }}
         run: |
           cd ci/ssh-win
-          docker-compose up -d --build
+          docker-compose -f win_Dockerfile up -d --build
           
           # retrieve id_rsa file for public key authentication
           mkdir $env:USERPROFILE/.ssh/
           docker run ipyparallel-sshd powershell.exe -Command "type C:\Users\ciuser\.ssh\id_rsa" | out-file -encoding ascii $env:USERPROFILE/.ssh/id_rsa
           
-          #check ssh connection
-          ssh -o "StrictHostKeyChecking no" ciuser@localhost -p 2222 -v ls /
+          #check ssh connection and accept host key
+          ssh -o "StrictHostKeyChecking no" ciuser@localhost -p 2222 -v ls c:\
+          
+          # copy ipyparallel code to docker container (use zip, scp and unzip)
+          ssh ciuser@localhost -p 2222 mkdir c:\src\ipyparallel
+          # zip ipyparallel files (excluding file might not be needed)
+          $exclude = @("__pycache__","node_modules")
+          $files = Get-ChildItem -Path "." -Exclude $exclude
+          Compress-Archive -Path $files -DestinationPath ipyparallel.zip -CompressionLevel Fastest
+          # copy file into docker (we need to do it over ssh since docker copy or mount doesn't work in Hyper-V)
+          scp -P 2222 ipyparallel.zip ciuser@localhost:c:\src\ipyparallel
+          # deflate ipyparallel files
+          ssh ciuser@localhost -p 2222 powershell.exe -Command "Expand-Archive -Path c:\src\ipyparallel\ipyparallel.zip -DestinationPath c:\src\ipyparallel"
+          
+          # pip install ipyparallel files
+          ssh ciuser@localhost -p 2222 dir c:\src\ipyparallel
+          ssh ciuser@localhost -p 2222 "cd c:\src\ipyparallel && pip install -e ."
+          
           
       - name: Set up slurm
         if: ${{ matrix.cluster_type == 'slurm' }}
