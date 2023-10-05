@@ -87,6 +87,10 @@ jobs:
 
       - name: Set up docker-compose for ssh windows launcher
         if: ${{ matrix.cluster_type == 'ssh' && contains(matrix.runs_on, 'windows') }}
+        env: 
+            ssh_host : ciuser@localhost
+            ssh_port : 2222
+            code_root : c:\src\ipyparallel
         run: |
           cd ci/ssh
           docker-compose -f win_docker-compose.yaml up -d --build
@@ -96,22 +100,23 @@ jobs:
           docker run ipyparallel-sshd powershell.exe -Command "type C:\Users\ciuser\.ssh\id_rsa" | out-file -encoding ascii $env:USERPROFILE/.ssh/id_rsa
           
           #check ssh connection and accept host key
-          ssh -o "StrictHostKeyChecking no" ciuser@localhost -p 2222 -v ls c:\
+          ssh -o "StrictHostKeyChecking no" $ssh_host -p $ssh_port -v ls c:\
           
           # copy ipyparallel code to docker container (use zip, scp and unzip)
-          ssh ciuser@localhost -p 2222 mkdir c:\src\ipyparallel
+          ssh $ssh_host -p $ssh_port mkdir $code_root
           # zip ipyparallel files (excluding file might not be needed)
+          cd ../..
           $exclude = @("__pycache__","node_modules")
           $files = Get-ChildItem -Path "." -Exclude $exclude
           Compress-Archive -Path $files -DestinationPath ipyparallel.zip -CompressionLevel Fastest
           # copy file into docker (we need to do it over ssh since docker copy or mount doesn't work in Hyper-V)
-          scp -P 2222 ipyparallel.zip ciuser@localhost:c:\src\ipyparallel
+          scp -P $ssh_port ipyparallel.zip $ssh_host:$code_root
           # deflate ipyparallel files
-          ssh ciuser@localhost -p 2222 powershell.exe -Command "Expand-Archive -Path c:\src\ipyparallel\ipyparallel.zip -DestinationPath c:\src\ipyparallel"
+          ssh $ssh_host -p $ssh_port powershell.exe -Command "Expand-Archive -Path $code_root\ipyparallel.zip -DestinationPath $code_root"
           
           # pip install ipyparallel files
-          ssh ciuser@localhost -p 2222 dir c:\src\ipyparallel
-          ssh ciuser@localhost -p 2222 "cd c:\src\ipyparallel && pip install -e ."
+          ssh $ssh_host -p $ssh_port dir $code_root
+          ssh $ssh_host -p $ssh_port "cd $code_root && pip install -e ."
           
           
       - name: Set up slurm
