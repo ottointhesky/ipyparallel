@@ -157,7 +157,11 @@ jobs:
       - name: Install extra Python packages
         if: ${{ ! startsWith(matrix.python, '3.11') }}
         run: |
-          pip install distributed joblib
+          echo "pip install distributed"
+          pip install distributed 
+          echo "pip install joblib"
+          pip install joblib
+          echo "pip install matplotlib"
           pip install --only-binary :all: matplotlib || echo "no matplotlib"
 
       - name: Show environment
