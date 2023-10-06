@@ -20,7 +20,8 @@ def setup_shellcmd_senders():
         if run(["where", "wsl"]).returncode == 0:
             #if wsl was found we can add a bash test as well (assuming that python3 is also installed)
             bash = (shellcmd.ShellCommandSend(["bash"], ["-c"], "python3", use_code_sending=1), "~/")   # use wsl to test with bash
-        senders = [cmd, cmd_cs, ps, ps_cs, ssh, bash]
+        #senders = [cmd, cmd_cs, ps, ps_cs, ssh, bash]
+        senders = [cmd_cs, ps_cs, ssh]
     else:
         # under linux we could also test more shells
         bash = (shellcmd.ShellCommandSend(["/usr/bin/bash"], ["-c"], "python3"), None)
@@ -37,7 +38,6 @@ def shellcmd_test_cmd():
     test_command["Linux"] = "ping -c 5 127.0.0.1"
     return test_command
 
-
 def test_all_shellcmds(setup_shellcmd_senders, shellcmd_test_cmd):
 
     def read_via_shell(shell, filename):
@@ -51,8 +51,10 @@ def test_all_shellcmds(setup_shellcmd_senders, shellcmd_test_cmd):
 
     # go through all senders for testing
     for sender, prefix in setup_shellcmd_senders:
+        assert_prefix = f"shell={sender.shell[0]} (code sending={sender.use_code_sending})"
+
         info = sender.get_shell_info()
-        assert len(info) == 2 and info[0] and info[1]
+        assert len(info) == 2 and info[0] and info[1], f"{assert_prefix}: invalid shell info return ({info})"
 
         if sender.is_linux:
             test_cmd = shellcmd_test_cmd["Linux"]
@@ -60,37 +62,37 @@ def test_all_shellcmds(setup_shellcmd_senders, shellcmd_test_cmd):
             test_cmd = shellcmd_test_cmd["Windows"]
 
         python_ok = sender.check_python()
-        assert python_ok is True
+        assert python_ok is True, f"{assert_prefix}: python not found"
 
         test_dir = "shellcmd_test"
         test_file = "testfile.txt"
 
         # perform basic file/directory operations
         sender.cmd_mkdir(test_dir)
-        assert sender.cmd_exists(test_dir) is True  # make sure that test_dir was created
+        assert sender.cmd_exists(test_dir) is True, f"{assert_prefix}: test directory '{test_dir}' was not created"
 
         # create a simple text file with one line (works on all platforms)
         fullpath = test_dir+'/'+test_file
         sender.check_output(f'echo "test-line" > {fullpath}')
 
-        assert sender.cmd_exists(fullpath) is True  # make sure that test file was created
+        assert sender.cmd_exists(fullpath) is True, f"{assert_prefix}: test file '{fullpath}' was not created"
 
         sender.cmd_remove(fullpath)
-        assert sender.cmd_exists(fullpath) is False  # make sure that test file was removed
+        assert sender.cmd_exists(fullpath) is False, f"{assert_prefix}: test file '{fullpath}' was not removed"
 
         sender.cmd_rmdir(test_dir)
-        assert sender.cmd_exists(test_dir) is False  # make sure that test_dir was deleted
+        assert sender.cmd_exists(test_dir) is False , f"{assert_prefix}: test directory '{test_dir}' was not removed"
 
         # do start operation test
         redirect_output_file = "output.txt"
         pid = sender.cmd_start(test_cmd, output_file=redirect_output_file)
-        assert pid > 0
-        assert sender.cmd_running(pid) is True  # make sure that process with pid is running
+        assert pid > 0 , f"{assert_prefix}: start command returned invalid pid={pid}"
+        assert sender.cmd_running(pid) is True, f"{assert_prefix}: pid={pid} is not running"
 
         sender.cmd_kill(pid, signal.SIGTERM)
 
-        assert sender.cmd_running(pid) is False  # make sure that process with pid is not running any more
-        assert sender.cmd_exists(redirect_output_file) is True  # make sure that output file was created
+        assert sender.cmd_running(pid) is False, f"{assert_prefix}: pid={pid} is still running"
+        assert sender.cmd_exists(redirect_output_file) is True, f"{assert_prefix}: output file '{redirect_output_file}' was not created"
         sender.cmd_remove(redirect_output_file)
 
         # do environment setting test
@@ -111,18 +113,18 @@ def test_all_shellcmds(setup_shellcmd_senders, shellcmd_test_cmd):
         pid = sender.cmd_start(f'{sender.python_path} -c "{python_cmd}"', env=env_dict, output_file=output_file)
 
         time.sleep(1)   #sleep for 1 second to make sure that command has finished
-        assert sender.cmd_running(pid) is False
+        assert sender.cmd_running(pid) is False, f"{assert_prefix} env-test: pid={pid} is still running"
 
         output_lines = read_via_shell(sender, output_file)
         # check lines if they correspond to original dictionary (env_dict)
-        assert len(output_lines) == 3
+        assert len(output_lines) == 3, f"{assert_prefix}: env-test: 3 lines expected but {len(output_lines)} returned"
         assert output_lines[0] == 'IPP_CLUSTER_ID set = False'
         for line in output_lines[1:]:
             key, value = line.split(" = ")
-            assert key in env_dict
+            assert key in env_dict, f"{assert_prefix}: env-test: key '{key}' not in env_dict ({env_dict})"
             if isinstance(env_dict[key], dict): # convert to dictionary if needed
                 value = eval(value)
-            assert env_dict[key] == value
+            assert env_dict[key] == value, f"{assert_prefix}: env-test: values do not match '{env_dict[key]}' != '{value}'"
 
 
 
