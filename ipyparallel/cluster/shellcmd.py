@@ -79,9 +79,9 @@ class ShellCommandReceive:
             print(f'__remote_pid={p.pid}__')
         else:
             if output_file:
-                nohup_start = f"nohup {start_cmd} >{output_file} 2>&1 </dev/null & echo __remote_pid=$!__"
+                nohup_start = f"exec nohup {start_cmd} >{output_file} 2>&1 </dev/null & echo __remote_pid=$!__"
             else:
-                nohup_start = f"nohup {start_cmd} >/dev/null 2>&1 </dev/null & echo __remote_pid=$!__"
+                nohup_start = f"exec nohup {start_cmd} >/dev/null 2>&1 </dev/null & echo __remote_pid=$!__"
             os.system(nohup_start)
 
 

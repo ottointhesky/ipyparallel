@@ -34,7 +34,7 @@ def shellcmd_test_cmd():
     """returns a command that runs for 5 seconds"""
     test_command = {}
     test_command["Windows"] = "ping -n 5 127.0.0.1"
-    test_command["Linux"] = "/bin/ping -c 5 127.0.0.1"
+    test_command["Linux"] = "sleep 5" #"/bin/ping -c 5 127.0.0.1"
     return test_command
 
 def test_all_shellcmds(setup_shellcmd_senders, shellcmd_test_cmd):
@@ -88,8 +88,9 @@ def test_all_shellcmds(setup_shellcmd_senders, shellcmd_test_cmd):
         sender.cmd_rmdir(test_dir)
         assert sender.cmd_exists(test_dir) is False
 
-        pid = sender.cmd_start("env", output_file="output2.txt")
-        print_file(sender, "output2.txt")
+        if sender.is_linux:
+            pid = sender.cmd_start("env", output_file="output2.txt")
+            print_file(sender, "output2.txt")
 
         # do start operation test
         redirect_output_file = "output.txt"
