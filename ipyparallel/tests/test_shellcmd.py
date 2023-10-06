@@ -48,6 +48,12 @@ def test_all_shellcmds(setup_shellcmd_senders, shellcmd_test_cmd):
         content = content.replace("\r\n", "\n") #correct line endings for windows
         return content.split("\n")
 
+    def print_file(shell, filename):
+        print(f"Content of file '{filename}':")
+        lines = read_via_shell(sender, filename)
+        for idx,l in enumerate(lines):
+            print(f"{idx:3}:{l}")
+
     # go through all senders for testing
     for sender, prefix in setup_shellcmd_senders:
         print(f"shell={sender.shell[0]} (code sending={sender.use_code_sending}, joining={sender.join_params}): Start tests...")
@@ -86,9 +92,14 @@ def test_all_shellcmds(setup_shellcmd_senders, shellcmd_test_cmd):
         redirect_output_file = "output.txt"
         pid = sender.cmd_start(test_cmd, output_file=redirect_output_file)
         assert pid > 0
+        if sender.cmd_running(pid) == False:
+            print_file(sender, redirect_output_file)
         assert sender.cmd_running(pid) is True
 
         sender.cmd_kill(pid, signal.SIGTERM)
+
+        if sender.cmd_running(pid) == False:
+            print_file(sender, redirect_output_file)
 
         assert sender.cmd_running(pid) is False
         assert sender.cmd_exists(redirect_output_file) is True
