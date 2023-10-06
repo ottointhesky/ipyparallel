@@ -63,13 +63,13 @@ def test_all_shellcmds(setup_shellcmd_senders, shellcmd_test_cmd):
 
         if sender.is_linux:
             test_cmd = shellcmd_test_cmd["Linux"]
+            ping_path = sender.check_output('which ping')
+            test_cmd.replace("ping", ping_path)
         else:
             test_cmd = shellcmd_test_cmd["Windows"]
 
         python_ok = sender.check_python()
         assert python_ok is True
-
-        print(sender.check_output('which ping'))
 
         test_dir = "shellcmd_test"
         test_file = "testfile.txt"
