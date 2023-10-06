@@ -22,10 +22,10 @@ def setup_shellcmd_senders():
             bash = (shellcmd.ShellCommandSend(["bash"], ["-c"], "python3", use_code_sending=1), "~/")   # use wsl to test with bash
         senders = [cmd, cmd_cs, ps, ps_cs, ssh, bash]
     else:
-        # under linux we could also test more that just the bash shell
+        # under linux we could also test more shells
         bash = (shellcmd.ShellCommandSend(["/usr/bin/bash"], ["-c"], "python3"), None)
         bash_cs = (shellcmd.ShellCommandSend(["/usr/bin/bash"], ["-c"], "python3", use_code_sending=1), None)
-        ssh = (shellcmd.ShellCommandSend(["ssh"], ["-p", "2222", "ciuser@localhost"], "python", use_code_sending=1), None)
+        ssh = (shellcmd.ShellCommandSend(["ssh"], ["-p", "2222", "ciuser@localhost"], "python3", use_code_sending=1), None)
         senders = [bash, bash_cs, ssh]
     return senders
 
