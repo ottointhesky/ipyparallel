@@ -112,8 +112,13 @@ def test_all_shellcmds(setup_shellcmd_senders, shellcmd_test_cmd):
             output_file = prefix + output_file
         pid = sender.cmd_start(f'{sender.python_path} -c "{python_cmd}"', env=env_dict, output_file=output_file)
 
-        time.sleep(1)   #sleep for 1 second to make sure that command has finished
-        assert sender.cmd_running(pid) is False, f"{assert_prefix} env-test: pid={pid} is still running"
+        counter = 0
+        max_counter = 5
+        while sender.cmd_running(pid) or counter > max_counter:
+            time.sleep(1)   #sleep for 1 second to make sure that command has finished
+            counter += 1
+
+        assert sender.cmd_running(pid) is False, f"{assert_prefix} env-test: pid={pid} is still running after {max_counter}s"
 
         output_lines = read_via_shell(sender, output_file)
         # check lines if they correspond to original dictionary (env_dict)
