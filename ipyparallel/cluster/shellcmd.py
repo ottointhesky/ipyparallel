@@ -60,6 +60,7 @@ class ShellCommandReceive:
             from subprocess import Popen
             from subprocess import CREATE_NEW_CONSOLE
             from subprocess import CREATE_BREAKAWAY_FROM_JOB
+            from subprocess import DEVNULL
 
             flags = 0
             flags |= CREATE_NEW_CONSOLE
@@ -73,6 +74,7 @@ class ShellCommandReceive:
                 fo = open(output_file, "w")
                 pkwargs['stdout'] = fo
                 pkwargs['stderr'] = fo
+                pkwargs['stdin'] = DEVNULL
 
             p = Popen(start_cmd, **pkwargs)
 
