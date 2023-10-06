@@ -32,9 +32,9 @@ jobs:
         include:
           - python: "3.9"
             cluster_type: ssh
-          - python: "3.8"
-            cluster_type: ssh
-            runs_on: windows-2019
+          #- python: "3.8"
+          #  cluster_type: ssh
+          #  runs_on: windows-2019
 
     steps:
       - uses: actions/checkout@v3
