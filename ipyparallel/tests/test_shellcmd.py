@@ -1,6 +1,4 @@
-"""test shell command tools"""
-import pickle
-from collections import namedtuple
+"""test shell command classes"""
 
 import pytest
 import sys, os

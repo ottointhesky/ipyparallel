@@ -176,8 +176,9 @@ class ShellCommandSend:
         self.shell = shell
         self.args = args
         self.python_path = python_path
-        self.is_linux = None    # changed if get_remote_shell_info is called
+        self.is_linux = None     # changed if get_remote_shell_info is called
         self.is_powershell = None
+        self.join_params = True  # join all cmd params into a single param. does NOT work with windows cmd
         self.use_code_sending = use_code_sending    # should be activated when developing...
         self.debugging = False  # for outputs to file for easier debugging
 
@@ -206,7 +207,7 @@ class ShellCommandSend:
         else:
             return f"'{param.translate(self._python_chars_map)}'"
 
-    def _powershell_quote(self,param):
+    def _powershell_quote(self, param):
         if '"' in param or "'" in param or " " in param:
             # we need to replace single and double quotes be two double quotes, but if we are inside a string,
             # we need to prepend a backslash to the double quote. Otherwise it will get removed
@@ -235,9 +236,14 @@ class ShellCommandSend:
             # send command through the corresponding package call
             if self.is_linux:
                 paramlist = [shlex.quote(p) for p in paramlist]
-            elif self.is_powershell:
-                paramlist = [self._powershell_quote(p) for p in paramlist]
-            cmd = self.shell + self.args + [self.python_path, "-m", self.package_name] + paramlist
+            else:
+                if self.is_powershell:
+                    paramlist = [self._powershell_quote(p) for p in paramlist]
+            full_list = [self.python_path, "-m", self.package_name] + paramlist
+            if self.join_params:
+                cmd = self.shell + self.args + [" ".join(full_list)]
+            else:
+                cmd = self.shell + self.args + full_list
 
             if self.debugging:
                 with open("send_cmd.txt", "w") as f:
@@ -297,6 +303,7 @@ class ShellCommandSend:
                 shell = "cmd.exe"
                 self.is_powershell = False
                 self.is_linux = False
+                self.join_params = False    # disable joining, since it does not work for windows cmd.exe
             elif key == "OS-WIN-PW":
                 system = val
                 shell = "powershell.exe"
@@ -392,17 +399,9 @@ class ShellCommandSend:
         """delete remote file"""
         output = self._send_cmd(["remove", p])
 
-#d = {}
-#d["IPP_CLUSTER_ID"] = ""
-#d["IPP_PROFILE_DIR"] = r"C:\Users\jo\.ipython\profile_ssh"
-#d["IPP_CONNECTION_INFO"] = {"ssh": "", "interface": "tcp://*", "registration": 60691, "control": 60692, "mux": 60693, "task": 60694, "iopub": 60695, "hb_ping": 60696, "hb_pong": 60697, "broadcast": [60698, 60699], "key": "169b682b-337c645951e7d47723061090", "curve_serverkey": "null", "location": "dvlp1", "pack": "json", "unpack": "json", "signature_scheme": "hmac-sha256"}
-#print(d)
-
 def main():
-    #with open("sys_arg.txt", "w") as f:
-    #    for idx, arg in enumerate(sys.argv):
-    #        f.write(f"{idx}:{arg}$\n")
     parser = ArgumentParser(description='Perform some standard shell command in a platform independent way')
+    parser.add_argument('--debug', action='store_true', help='append command line parameters to \'sys_arg.txt\'')
     subparsers = parser.add_subparsers(dest='cmd', help='sub-command help')
 
     # create the parser for the "a" command
@@ -436,6 +435,13 @@ def main():
 
     args = parser.parse_args()
     cmd = args.__dict__.pop('cmd')
+
+    if args.debug:
+        with open("sys_arg.txt", "a") as f:
+            f.write(f"'{__file__}' started in '{os.getcwd()}':\n")
+            for idx, arg in enumerate(sys.argv[1:]):
+                f.write(f"\t{idx}:{arg}$\n")
+    del args.debug
 
     recevier = ShellCommandReceive()
     if cmd == "start":
