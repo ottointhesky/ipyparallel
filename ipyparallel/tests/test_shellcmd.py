@@ -69,6 +69,8 @@ def test_all_shellcmds(setup_shellcmd_senders, shellcmd_test_cmd):
         python_ok = sender.check_python()
         assert python_ok is True
 
+        print(sender.check_output('which ping'))
+
         test_dir = "shellcmd_test"
         test_file = "testfile.txt"
 
