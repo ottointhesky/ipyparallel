@@ -114,7 +114,7 @@ def test_all_shellcmds(setup_shellcmd_senders, shellcmd_test_cmd):
 
         counter = 0
         max_counter = 5
-        while sender.cmd_running(pid) or counter > max_counter:
+        while sender.cmd_running(pid) or counter < max_counter:
             time.sleep(1)   #sleep for 1 second to make sure that command has finished
             counter += 1
 
