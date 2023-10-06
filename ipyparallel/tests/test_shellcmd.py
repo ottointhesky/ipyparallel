@@ -63,8 +63,6 @@ def test_all_shellcmds(setup_shellcmd_senders, shellcmd_test_cmd):
 
         if sender.is_linux:
             test_cmd = shellcmd_test_cmd["Linux"]
-            ping_path = sender.check_output('which ping')
-            test_cmd.replace("ping", ping_path)
         else:
             test_cmd = shellcmd_test_cmd["Windows"]
 
@@ -89,6 +87,9 @@ def test_all_shellcmds(setup_shellcmd_senders, shellcmd_test_cmd):
 
         sender.cmd_rmdir(test_dir)
         assert sender.cmd_exists(test_dir) is False
+
+        pid = sender.cmd_start("env", output_file="output2.txt")
+        print_file(sender, "output2.txt")
 
         # do start operation test
         redirect_output_file = "output.txt"
