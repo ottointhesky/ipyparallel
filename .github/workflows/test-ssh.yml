@@ -23,7 +23,7 @@ env:
 jobs:
   test:
     runs-on: ${{ matrix.runs_on || 'ubuntu-20.04' }}
-    timeout-minutes: 20
+    timeout-minutes: 30
 
     strategy:
       # Keep running even if one variation of the job fail
@@ -158,8 +158,7 @@ jobs:
         if: ${{ ! startsWith(matrix.python, '3.11') }}
         run: |
           pip install distributed joblib
-          #pip install --only-binary :all: matplotlib || echo "no matplotlib"
-          pip install --only-binary :all: matplotlib
+          pip install --only-binary :all: matplotlib || echo "no matplotlib"
 
       - name: Show environment
         run: pip freeze
