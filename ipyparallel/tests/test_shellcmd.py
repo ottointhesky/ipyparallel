@@ -17,11 +17,10 @@ def setup_shellcmd_senders():
         ps = (shellcmd.ShellCommandSend(["powershell.exe"], ["-Command"], sys.executable), None)
         ps_cs = (shellcmd.ShellCommandSend(["powershell.exe"], ["-Command"], sys.executable, use_code_sending=1), None)
         ssh = (shellcmd.ShellCommandSend(["ssh"], ["-p", "2222", "ciuser@localhost"], "python", use_code_sending=1), None)
-        if run(["where", "wsl"]).returncode == 0:
-            #if wsl was found we can add a bash test as well (assuming that python3 is also installed)
-            bash = (shellcmd.ShellCommandSend(["bash"], ["-c"], "python3", use_code_sending=1), "~/")   # use wsl to test with bash
-        #senders = [cmd, cmd_cs, ps, ps_cs, ssh, bash]
-        senders = [cmd_cs, ps_cs, ssh]
+        #if run(["where", "wsl"]).returncode == 0:
+        #    #if wsl was found we can add a bash test as well (assuming that python3 is also installed)
+        #    bash = (shellcmd.ShellCommandSend(["bash"], ["-c"], "python3", use_code_sending=1), "~/")   # use wsl to test with bash
+        senders = [cmd, cmd_cs, ps, ps_cs, ssh]
     else:
         # under linux we could also test more shells
         bash = (shellcmd.ShellCommandSend(["/usr/bin/bash"], ["-c"], "python3"), None)
@@ -51,7 +50,7 @@ def test_all_shellcmds(setup_shellcmd_senders, shellcmd_test_cmd):
 
     # go through all senders for testing
     for sender, prefix in setup_shellcmd_senders:
-        print(f"Running test with shell={sender.shell[0]} (code sending={sender.use_code_sending})")
+        print(f"shell={sender.shell[0]} (code sending={sender.use_code_sending}): Start tests...")
 
         info = sender.get_shell_info()
         assert len(info) == 2 and info[0] and info[1]
@@ -131,5 +130,4 @@ def test_all_shellcmds(setup_shellcmd_senders, shellcmd_test_cmd):
                 value = eval(value)
             assert env_dict[key] == value
 
-        assert False
-
+        print(f"shell={sender.shell[0]} (code sending={sender.use_code_sending}): tests finished successful")
