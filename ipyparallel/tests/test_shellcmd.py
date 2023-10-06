@@ -34,7 +34,7 @@ def shellcmd_test_cmd():
     """returns a command that runs for 5 seconds"""
     test_command = {}
     test_command["Windows"] = "ping -n 5 127.0.0.1"
-    test_command["Linux"] = "ping -c 5 127.0.0.1"
+    test_command["Linux"] = "/bin/ping -c 5 127.0.0.1"
     return test_command
 
 def test_all_shellcmds(setup_shellcmd_senders, shellcmd_test_cmd):
