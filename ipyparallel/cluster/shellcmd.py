@@ -86,7 +86,6 @@ class ShellCommandReceive:
                 nohup_start = f"exec nohup {start_cmd} >/dev/null 2>&1 </dev/null & echo __remote_pid=$!__"
             os.system(nohup_start)
 
-
     def cmd_running(self, pid):
         if os.name == "nt":
             # taken from https://stackoverflow.com/questions/568271/how-to-check-if-there-exists-a-process-with-a-given-pid-in-python
@@ -174,18 +173,25 @@ class ShellCommandSend:
     receiver_code = inspect.getsource(ShellCommandReceive)
     _python_chars_map =  str.maketrans( {"\\": "\\\\", "'": "\\'"} )
 
-    def __init__(self, shell, args, python_path, use_code_sending = False):
+    def __init__(self, shell, args, python_path, immediate_initialization = True, use_code_sending = False ):
         self.shell = shell
         self.args = args
         self.python_path = python_path
-        self.is_linux = None     # changed if get_remote_shell_info is called
-        self.is_powershell = None
+
+        # shell dependent values. Those values are determined in the initialize function
+        self.shell_info = None
+        self.is_linux = None        # flag if shell is one a linux machine
+        self.is_powershell = None   # flag if shell is windows powershell (requires special parameter quoting)
         self.join_params = True  # join all cmd params into a single param. does NOT work with windows cmd
+        self.pathsep = "/"       # equivalent to os.pathsep (will be changed during initialization)
+
         self.use_code_sending = use_code_sending    # should be activated when developing...
         self.debugging = False  # for outputs to file for easier debugging
-        self.pathsep = "/"      # equivalent to os.pathsep
         #if "ssh" in shell:
         #    self.join_params = False    #just for testing
+
+        if immediate_initialization:
+            self.initialize()
 
     def _check_output(self, cmd):
         return check_output(cmd).decode('utf8', 'replace')
@@ -278,13 +284,10 @@ class ShellCommandSend:
             cmd = self.shell + self.args + [self.python_path]
             return check_output(cmd, universal_newlines=True, input=py_cmd)
 
-    def get_shell_info(self):
-        """
-        get shell information by sending an echo command that works on all OS and shells
-
-        :return: (str, str): string of system and shell
-        """
-
+    def initialize(self):
+        """initialize necessary variables by sending an echo command that works on all OS and shells"""
+        if self.shell_info:
+            return
         #  example outputs on
         #   windows-powershell: OS-WIN-CMD=%OS%;OS-WIN-PW=Windows_NT;OS-LINUX=;SHELL=
         #   windows-cmd       : "OS-WIN-CMD=Windows_NT;OS-WIN-PW=$env:OS;OS-LINUX=$OSTYPE;SHELL=$SHELL"
@@ -323,10 +326,22 @@ class ShellCommandSend:
             elif key == "SHELL":
                 shell = val
 
-        return (system, shell)
+        self.shell_info = (system, shell)
+
+
+    def get_shell_info(self):
+        """
+        get shell information
+        :return: (str, str): string of system and shell
+        """
+        assert self.shell_info  # make sure that initialize was called already
+        return self.shell_info
 
     def check_python(self, python_path=None):
-        """Check if remote python can be started"""
+        """Check if remote python can be started
+        :return: bool: flag if start was successful
+        """
+        assert self.shell_info  # make sure that initialize was called already
         if not python_path:
             python_path = self.python_path
         cmd = self.shell + self.args + [ python_path, '--version']
