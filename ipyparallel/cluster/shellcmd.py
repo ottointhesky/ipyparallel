@@ -183,6 +183,7 @@ class ShellCommandSend:
         self.join_params = True  # join all cmd params into a single param. does NOT work with windows cmd
         self.use_code_sending = use_code_sending    # should be activated when developing...
         self.debugging = False  # for outputs to file for easier debugging
+        self.pathsep = "/"      # equivalent to os.pathsep
         #if "ssh" in shell:
         #    self.join_params = False    #just for testing
 
@@ -308,11 +309,13 @@ class ShellCommandSend:
                 self.is_powershell = False
                 self.is_linux = False
                 self.join_params = False    # disable joining, since it does not work for windows cmd.exe
+                self.pathsep = "\\"
             elif key == "OS-WIN-PW":
                 system = val
                 shell = "powershell.exe"
                 self.is_powershell = True
                 self.is_linux = False
+                self.pathsep = "\\"
             elif key == "OS-LINUX":
                 system = val
                 self.is_powershell = False

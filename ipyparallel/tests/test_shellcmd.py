@@ -77,10 +77,13 @@ def test_all_shellcmds(setup_shellcmd_senders, shellcmd_test_cmd):
         assert sender.cmd_exists(test_dir) is True
 
         # create a simple text file with one line (works on all platforms)
-        fullpath = test_dir+'/'+test_file
+        fullpath = test_dir+sender.pathsep+test_file
         sender.check_output(f'echo "test-line" > {fullpath}')
-
         assert sender.cmd_exists(fullpath) is True
+        output_lines = read_via_shell(sender, fullpath)
+        assert len(output_lines) == 1
+        assert "test-line" in output_lines[0]
+
 
         sender.cmd_remove(fullpath)
         assert sender.cmd_exists(fullpath) is False
