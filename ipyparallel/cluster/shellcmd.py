@@ -29,14 +29,22 @@ class ShellCommandReceive:
     successfull. Some command require information to be returned (cmd_exists, cmd_start, cmd_running) which
     is written to stdout in the following form: __<key>=<value>__
     """
-    def __init__(self):
-        self.debugging = False
+    def __init__(self, debugging=False):
+        self.debugging = debugging
         pass
+
+    def _linux_quote(self, p):
+        if "'" in p:
+            return '"'+p+'"'
+        else:
+            return p
 
     def cmd_start(self, start_cmd, env=None, output_file=None):
         if env:
             # add provided entries to environment
-            if isinstance(env,str):
+            if isinstance(env, str):
+                if env[0] == '"' and env[-1] == '"':
+                    env = env.strip('"')    # occurs under windows cmd
                 env_dict = eval(env)
                 assert(isinstance(env_dict, dict) is True)
                 env = env_dict
@@ -52,9 +60,21 @@ class ShellCommandReceive:
                     if key in os.environ:
                         del os.environ[key]
 
+        if isinstance(start_cmd, str):
+            start_cmd = [start_cmd]
+
+        if os.name == 'nt':
+            # under windows we need to remove embracing double quotes
+            for idx, p in enumerate(start_cmd):
+                if not isinstance(p, str):
+                    start_cmd[idx] = str(p)
+                    continue
+                if p[0] == '"' and p[-1] == '"':
+                    start_cmd[idx] = p.strip('"')
+
         if self.debugging:
             with open("start_cmd.txt", "w") as f:
-                f.write(start_cmd)
+                f.write(str(start_cmd))
 
         if os.name == "nt":
             from subprocess import Popen
@@ -80,10 +100,12 @@ class ShellCommandReceive:
 
             print(f'__remote_pid={p.pid}__')
         else:
+            start_cmd = [self._linux_quote(x) for x in start_cmd]
+
             if output_file:
-                nohup_start = f"exec nohup {start_cmd} >{output_file} 2>&1 </dev/null & echo __remote_pid=$!__"
+                nohup_start = f"nohup {' '.join(start_cmd)} >{output_file} 2>&1 </dev/null & echo __remote_pid=$!__"
             else:
-                nohup_start = f"exec nohup {start_cmd} >/dev/null 2>&1 </dev/null & echo __remote_pid=$!__"
+                nohup_start = f"nohup {' '.join(start_cmd)} >/dev/null 2>&1 </dev/null & echo __remote_pid=$!__"
             os.system(nohup_start)
 
     def cmd_running(self, pid):
@@ -242,6 +264,16 @@ class ShellCommandSend:
         else:
             return param
 
+    def _cmd_quote(self, param):
+        if "'" in param:
+            tmp = param.strip() #if already double quoted we do not need to quote
+            if tmp[0] == '"' and tmp[-1] == '"':
+                return tmp
+            else:
+                return '"' + tmp + '"'
+        else:
+            return param
+
     def _send_cmd(self, paramlist):
         if not self.use_code_sending:
             # send command through the corresponding package call
@@ -250,6 +282,9 @@ class ShellCommandSend:
             else:
                 if self.is_powershell:
                     paramlist = [self._powershell_quote(p) for p in paramlist]
+                else:
+                    paramlist = [self._cmd_quote(p) for p in paramlist]
+
             full_list = [self.python_path, "-m", self.package_name] + paramlist
             if self.join_params:
                 cmd = self.shell + self.args + [" ".join(full_list)]
@@ -267,20 +302,35 @@ class ShellCommandSend:
             # exists (or is update to date) on the 'other' side of the shell. This is particular
             # useful when doing further development without copying the adapted file before each
             # test run
-            py_cmd = f"import sys, os\n{self.receiver_code}\nShellCommandReceive().cmd_{paramlist[0]}("
+            debug_str = ""
+            if "--debug" == paramlist[0].strip():
+                del paramlist[0]
+                debug_str += "debugging=True"
+
+            py_cmd = f"import sys, os\n{self.receiver_code}\nShellCommandReceive({debug_str}).cmd_{paramlist[0]}("
             skip = False
+            unnamed_params = ""
+            named_params = ""
+            unnamed_count = 0
             for idx in range(1, len(paramlist)):
+                if paramlist[idx] == '--':
+                    continue
                 if skip:
                     skip = False
                     continue
-                if idx > 1:
-                    py_cmd += ", "
                 if paramlist[idx][0:2] == "--":
-                    py_cmd += f"{paramlist[idx][2:]}={self._format_for_python(paramlist[idx+1])}"
+                    named_params += f"{paramlist[idx][2:]}={self._format_for_python(paramlist[idx+1])}, "
                     skip = True
                 else:
-                    py_cmd += self._format_for_python(paramlist[idx])
-            py_cmd += ")\n"
+                    unnamed_params += self._format_for_python(paramlist[idx])+", "
+                    unnamed_count += 1
+            if len(named_params) > 0:
+                named_params = named_params[:-2]
+            elif len(unnamed_params) > 0:
+                unnamed_params = unnamed_params[:-2]
+            if unnamed_count > 1:
+                unnamed_params = f"[{unnamed_params[:-2]}], "
+            py_cmd += f"{unnamed_params}{named_params})\n"
             cmd = self.shell + self.args + [self.python_path]
             return check_output(cmd, universal_newlines=True, input=py_cmd)
 
@@ -300,7 +350,7 @@ class ShellCommandSend:
             raise Exception("Unable to get remote shell information. Are the ssh connection data correct?")
         entries = output.strip().strip('\\"').strip('"').split(";")
         # filter output non valid entries: contains =$ or =% or has no value assign (.....=)
-        valid_entries = list(filter(lambda e: not ("=$" in e or "=%" in e or e[-1] == '='), entries))
+        valid_entries = list(filter(lambda e: not ("=$" in e or "=%" in e or "=:" in e or e[-1] == '='), entries))
         system = shell = None
 
         # currently we do not check if double entries are found
@@ -367,11 +417,21 @@ class ShellCommandSend:
 
     def cmd_start(self, cmd, env={}, output_file=None, log=None):
         """start cmd into background and return remote pid"""
-        paramlist = ["start", cmd]
+        # join comands into a single parameter. otherwise
+        paramlist = ["start"]   # ["--debug", "start"] # prepent debug for easier error analysis
         if env and len(env) > 0:
             paramlist.extend(["--env", str(env)])
         if output_file:
             paramlist.extend(["--output_file", output_file])
+        if not self.is_linux:
+            # for windows shells we need to split program and arguments into a list
+            if isinstance(cmd, str):
+                cmd_param_list = shlex.split(cmd)
+            else:
+                cmd_param_list = self._as_list(cmd)
+            paramlist.extend(['--'] + cmd_param_list)
+        else:
+            paramlist.extend(['--'] + self._as_list(cmd))
 
         output = self._send_cmd(paramlist)
         # need to extract pid value
@@ -421,16 +481,16 @@ class ShellCommandSend:
         """delete remote file"""
         output = self._send_cmd(["remove", p])
 
-def main():
+def cmdline_start():
     parser = ArgumentParser(description='Perform some standard shell command in a platform independent way')
     parser.add_argument('--debug', action='store_true', help='append command line parameters to \'sys_arg.txt\'')
     subparsers = parser.add_subparsers(dest='cmd', help='sub-command help')
 
     # create the parser for the "a" command
     parser_start = subparsers.add_parser('start', help='start a process into background')
-    parser_start.add_argument('start_cmd', help='command that  help')
     parser_start.add_argument('--env', help='optional environment dictionary')
     parser_start.add_argument('--output_file', help='optional output redirection (for stdout and stderr)')
+    parser_start.add_argument('start_cmd', nargs='+', help='command that help')
 
     parser_running = subparsers.add_parser('running', help='check if a process is running')
     parser_running.add_argument('pid', type=int, help='pid of process that should be checked')
@@ -483,4 +543,4 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    cmdline_start()
