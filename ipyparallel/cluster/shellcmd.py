@@ -281,7 +281,7 @@ class ShellCommandSend:
     def _dict2str(self, d):
         tmp = {}
         for k, v in d.items():
-            if v[0] == '{' and v[-1] == '}':
+            if isinstance(v, str) and v != "" and v[0] == '{' and v[-1] == '}':
                 try:
                     v = v.replace("null", "None")
                     v_dict = eval(v)
@@ -326,7 +326,7 @@ class ShellCommandSend:
                 debug_str += "debugging=True"
                 debug_str += "debugging=True"
 
-            py_cmd = f"import sys, os\n{self.receiver_code}\nShellCommandReceive({debug_str}).cmd_{paramlist[0]}("
+            py_cmd = f"import sys, os, json\n{self.receiver_code}\nShellCommandReceive({debug_str}).cmd_{paramlist[0]}("
             skip = False
             unnamed_params = ""
             named_params = ""
