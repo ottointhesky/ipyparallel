@@ -24,10 +24,12 @@ def setup_shellcmd_senders():
         senders = [cmd, cmd_cs, ps, ps_cs, ssh, ssh_cs, bash]
     else:
         # under linux we could also test more shells
+        py_exe = '/opt/conda/bin/python3'
         bash = (shellcmd.ShellCommandSend(["/usr/bin/bash"], ["-c"], "python3"), None)
         bash_cs = (shellcmd.ShellCommandSend(["/usr/bin/bash"], ["-c"], "python3", use_code_sending=1), None)
-        ssh = (shellcmd.ShellCommandSend(["ssh"], ["-p", "2222", "ciuser@localhost"], "python3", use_code_sending=1), None)
-        senders = [bash, bash_cs, ssh]
+        ssh = (shellcmd.ShellCommandSend(["ssh"], ["-p", "2222", "ciuser@localhost"], py_exe), None)
+        ssh_cs = (shellcmd.ShellCommandSend(["ssh"], ["-p", "2222", "ciuser@localhost"], py_exe, use_code_sending=1), None)
+        senders = [bash, bash_cs, ssh, ssh_cs]
     return senders
 
 @pytest.fixture
