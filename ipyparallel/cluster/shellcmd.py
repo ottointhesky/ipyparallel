@@ -28,13 +28,14 @@ class ShellCommandReceive:
     successfull. Some command require information to be returned (cmd_exists, cmd_start, cmd_running) which
     is written to stdout in the following form: __<key>=<value>__
     """
+
     def __init__(self, debugging=False):
         self.debugging = debugging
         pass
 
     def _linux_quote(self, p):
         if "'" in p:
-            return '"'+p+'"'
+            return '"' + p + '"'
         else:
             return p
 
@@ -43,14 +44,14 @@ class ShellCommandReceive:
             # add provided entries to environment
             if isinstance(env, str):
                 if env[0] == '"' and env[-1] == '"':
-                    env = env.strip('"')    # occurs under windows cmd
+                    env = env.strip('"')  # occurs under windows cmd
                 if "\\'" in env:
-                    env = env.replace("\\'", "'")   # replace quoted
+                    env = env.replace("\\'", "'")  # replace quoted
                 env_dict = eval(env)
-                assert(isinstance(env_dict, dict) is True)
+                assert (isinstance(env_dict, dict) is True)
                 env = env_dict
 
-            assert(isinstance(env, dict) is True)   # make sure that env is a dictionary
+            assert (isinstance(env, dict) is True)  # make sure that env is a dictionary
 
             # update environment
             for key, value in env.items():
@@ -116,7 +117,7 @@ class ShellCommandReceive:
         if os.name == "nt":
             # taken from https://stackoverflow.com/questions/568271/how-to-check-if-there-exists-a-process-with-a-given-pid-in-python
             import ctypes
-            PROCESS_QUERY_INFROMATION = 0x1000 # if actually PROCESS_QUERY_LIMITED_INFORMATION
+            PROCESS_QUERY_INFROMATION = 0x1000  # if actually PROCESS_QUERY_LIMITED_INFORMATION
             STILL_ACTIVE = 259
             processHandle = ctypes.windll.kernel32.OpenProcess(PROCESS_QUERY_INFROMATION, 0, pid)
             if processHandle == 0:
@@ -141,8 +142,8 @@ class ShellCommandReceive:
             # https://stackoverflow.com/questions/28551180/how-to-kill-subprocess-python-in-windows
 
             # solution using taskill
-            #import subprocess
-            #subprocess.call(['taskkill', '/F', '/T', '/PID',  str(pid)])  # /T kills all child processes as well
+            # import subprocess
+            # subprocess.call(['taskkill', '/F', '/T', '/PID',  str(pid)])  # /T kills all child processes as well
 
             # use windows api to kill process (doesn't kill children processes)
             # To kill all children process things are more complicated. see e.g.
@@ -158,7 +159,7 @@ class ShellCommandReceive:
             os.kill(pid, sig)
 
     def cmd_mkdir(self, path):
-        os.makedirs(path, exist_ok=True)    # we allow that the directory already exists
+        os.makedirs(path, exist_ok=True)  # we allow that the directory already exists
 
     def cmd_rmdir(self, path):
         import shutil
@@ -194,42 +195,45 @@ class ShellCommandSend:
         transfers the ShellCommandReceive class directly to 'other side'. It should also be mentioned that the
         code sending option is much faster in executing the code.
     """
-    package_name = "ipyparallel.shellcmd"    # package name for send the command
+    package_name = "ipyparallel.shellcmd"  # package name for send the command
     output_template = re.compile(r"__([a-z][a-z0-9_]+)=([a-z0-9\-\.]+)__", re.IGNORECASE)
     receiver_code = inspect.getsource(ShellCommandReceive)
-    _python_chars_map =  str.maketrans( {"\\": "\\\\", "'": "\\'"} )
+    _python_chars_map = str.maketrans({"\\": "\\\\", "'": "\\'"})
 
-    def __init__(self, shell, args, python_path, immediate_initialization = True, use_code_sending = False ):
+    def __init__(self, shell, args, python_path, immediate_initialization=True, use_code_sending=False):
         self.shell = shell
         self.args = args
         self.python_path = python_path
 
         # shell dependent values. Those values are determined in the initialize function
         self.shell_info = None
-        self.is_linux = None        # flag if shell is one a linux machine
-        self.is_powershell = None   # flag if shell is windows powershell (requires special parameter quoting)
+        self.is_linux = None  # flag if shell is one a linux machine
+        self.is_powershell = None  # flag if shell is windows powershell (requires special parameter quoting)
         self.join_params = True  # join all cmd params into a single param. does NOT work with windows cmd
-        self.pathsep = "/"       # equivalent to os.pathsep (will be changed during initialization)
+        self.pathsep = "/"  # equivalent to os.pathsep (will be changed during initialization)
 
-        self.use_code_sending = use_code_sending    # should be activated when developing...
+        self.use_code_sending = use_code_sending  # should be activated when developing...
         self.debugging = False  # for outputs to file for easier debugging
-        #if "ssh" in shell:
+        # if "ssh" in shell:
         #    self.join_params = False    #just for testing
 
         if immediate_initialization:
             self.initialize()
 
-    def _check_output(self, cmd):
+    @staticmethod
+    def _check_output(cmd):
         return check_output(cmd).decode('utf8', 'replace')
 
-    def _runs_successful(self, cmd):
+    @staticmethod
+    def _runs_successful(cmd):
         try:
             check_output(cmd)
         except CalledProcessError as e:
             return False
         return True
 
-    def _as_list(self, cmd):
+    @staticmethod
+    def _as_list(cmd):
         if isinstance(cmd, str):
             return [cmd]
         elif isinstance(cmd, list):
@@ -237,40 +241,43 @@ class ShellCommandSend:
         else:
             raise Exception("Unknown command type")
 
-    def _format_for_python(self, param):
-        assert(isinstance(param, str) is True)
+    @staticmethod
+    def _format_for_python(param):
+        assert (isinstance(param, str) is True)
         if param.isnumeric():
             return param
         else:
-            return f"'{param.translate(self._python_chars_map)}'"
+            return f"'{param.translate(ShellCommandSend._python_chars_map)}'"
 
-    def _powershell_quote(self, param):
+    @staticmethod
+    def _powershell_quote(param):
         if '"' in param or "'" in param or " " in param:
             # we need to replace single and double quotes be two double quotes, but if we are inside a string,
             # we need to prepend a backslash to the double quote. Otherwise it will get removed
             quoted = ""
             in_string = False
             for idx, c in enumerate(param):
-                prev_c = None if idx == 0 else param[idx-1]
-                next_c = None if idx == len(param)-1 else param[idx+1]
+                prev_c = None if idx == 0 else param[idx - 1]
+                next_c = None if idx == len(param) - 1 else param[idx + 1]
                 if c == '"' and prev_c != "\\":
                     in_string = not in_string
-                    quoted += '"'*2
+                    quoted += '"' * 2
                     continue
                 if c == "'":
                     if in_string:
-                        quoted += '\\"'*2
+                        quoted += '\\"' * 2
                     else:
-                        quoted += '"'*2
+                        quoted += '"' * 2
                     continue
                 quoted += c
-            return "'"+quoted+"'"
+            return "'" + quoted + "'"
         else:
             return param
 
-    def _cmd_quote(self, param):
+    @staticmethod
+    def _cmd_quote(param):
         if "'" in param:
-            tmp = param.strip() #if already double quoted we do not need to quote
+            tmp = param.strip()  # if already double quoted we do not need to quote
             if tmp[0] == '"' and tmp[-1] == '"':
                 return tmp
             else:
@@ -278,7 +285,8 @@ class ShellCommandSend:
         else:
             return param
 
-    def _dict2str(self, d):
+    @staticmethod
+    def _dict2str(d):
         tmp = {}
         for k, v in d.items():
             if isinstance(v, str) and v != "" and v[0] == '{' and v[-1] == '}':
@@ -338,10 +346,10 @@ class ShellCommandSend:
                     skip = False
                     continue
                 if paramlist[idx][0:2] == "--":
-                    named_params += f"{paramlist[idx][2:]}={self._format_for_python(paramlist[idx+1])}, "
+                    named_params += f"{paramlist[idx][2:]}={self._format_for_python(paramlist[idx + 1])}, "
                     skip = True
                 else:
-                    unnamed_params += self._format_for_python(paramlist[idx])+", "
+                    unnamed_params += self._format_for_python(paramlist[idx]) + ", "
                     unnamed_count += 1
             if len(named_params) > 0:
                 named_params = named_params[:-2]
@@ -380,7 +388,7 @@ class ShellCommandSend:
                 shell = "cmd.exe"
                 self.is_powershell = False
                 self.is_linux = False
-                self.join_params = False    # disable joining, since it does not work for windows cmd.exe
+                self.join_params = False  # disable joining, since it does not work for windows cmd.exe
                 self.pathsep = "\\"
             elif key == "OS-WIN-PW":
                 system = val
@@ -397,7 +405,6 @@ class ShellCommandSend:
 
         self.shell_info = (system, shell)
 
-
     def get_shell_info(self):
         """
         get shell information
@@ -413,7 +420,7 @@ class ShellCommandSend:
         assert self.shell_info  # make sure that initialize was called already
         if not python_path:
             python_path = self.python_path
-        cmd = self.shell + self.args + [ python_path, '--version']
+        cmd = self.shell + self.args + [python_path, '--version']
         return self._runs_successful(cmd)
 
     def check_ipython_package(self):
@@ -437,7 +444,7 @@ class ShellCommandSend:
     def cmd_start(self, cmd, env={}, output_file=None, log=None):
         """start cmd into background and return remote pid"""
         # join comands into a single parameter. otherwise
-        paramlist = ["start"]   # ["--debug", "start"] # prepent debug for easier error analysis
+        paramlist = ["start"]  # prepend --debug for easier error analysis
         if env and len(env) > 0:
             paramlist.extend(["--env", self._dict2str(env)])
         if output_file:
