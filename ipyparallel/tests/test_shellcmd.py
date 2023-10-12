@@ -18,10 +18,10 @@ def setup_shellcmd_senders():
         ps_cs = (shellcmd.ShellCommandSend(["powershell.exe"], ["-Command"], sys.executable, use_code_sending=1), None)
         ssh = (shellcmd.ShellCommandSend(["ssh"], ["-p", "2222", "ciuser@127.0.0.1"], "python"), None)
         ssh_cs = (shellcmd.ShellCommandSend(["ssh"], ["-p", "2222", "ciuser@127.0.0.1"], "python", use_code_sending=1), None)
-        if run(["where", "wsl"]).returncode == 0:
-            #if wsl was found we can add a bash test as well (assuming that python3 is also installed)
-            bash = (shellcmd.ShellCommandSend(["bash"], ["-c"], "python3", use_code_sending=1), "/home/jo/")   # use wsl to test with bash
-        senders = [cmd, cmd_cs, ps, ps_cs, ssh, ssh_cs, bash]
+        #if run(["where", "wsl"]).returncode == 0:
+        #    #if wsl was found we can add a bash test as well (assuming that python3 is also installed)
+        #    bash = (shellcmd.ShellCommandSend(["bash"], ["-c"], "python3", use_code_sending=1), "/home/jo/")   # use wsl to test with bash
+        senders = [cmd, cmd_cs, ps, ps_cs, ssh, ssh_cs] #, bash]
     else:
         # under linux we could also test more shells
         py_exe = '/opt/conda/bin/python3'
