@@ -27,8 +27,8 @@ def setup_shellcmd_senders():
         py_exe = '/opt/conda/bin/python3'
         bash = (shellcmd.ShellCommandSend(["/usr/bin/bash"], ["-c"], "python3"), None)
         bash_cs = (shellcmd.ShellCommandSend(["/usr/bin/bash"], ["-c"], "python3", use_code_sending=1), None)
-        ssh = (shellcmd.ShellCommandSend(["ssh"], ["-p", "2222", "ciuser@localhost"], py_exe), None)
-        ssh_cs = (shellcmd.ShellCommandSend(["ssh"], ["-p", "2222", "ciuser@localhost"], py_exe, use_code_sending=1), None)
+        ssh = (shellcmd.ShellCommandSend(["ssh"], ["-p", "2222", "ciuser@127.0.0.1"], py_exe), None)
+        ssh_cs = (shellcmd.ShellCommandSend(["ssh"], ["-p", "2222", "ciuser@127.0.0.1"], py_exe, use_code_sending=1), None)
         senders = [bash, bash_cs, ssh, ssh_cs]
     return senders
 
