@@ -1,9 +1,0 @@
-services:
-  sshd:
-    image: ipyparallel-sshd
-    tty: true
-    build:
-      context: ../..
-      dockerfile: ci/ssh-win/Dockerfile
-    ports:
-      - "2222:22"
