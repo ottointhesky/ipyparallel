@@ -19,7 +19,7 @@ def ssh_config(request):
     windows = True if os.name == "nt" else False
 
     if windows and request.param == "SSHProxy":     # SSHProxy currently not working under Windows
-        pytest.skip("Proxy")
+        pytest.skip("Proxy tests currently not working under Windows")
 
     c = Config()
     c.Cluster.controller_ip = '0.0.0.0'
