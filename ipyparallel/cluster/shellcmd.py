@@ -220,8 +220,8 @@ class ShellCommandSend:
             self.initialize()
 
     @staticmethod
-    def _check_output(cmd, timeout=None):
-        return check_output(cmd, timeout=timeout).decode('utf8', 'replace')
+    def _check_output(cmd, timeout=None, universal_newlines=None, input=None):
+        return check_output(cmd, timeout=timeout, universal_newlines=universal_newlines, input=input).decode('utf8', 'replace')
 
     @staticmethod
     def _runs_successful(cmd):
@@ -322,7 +322,7 @@ class ShellCommandSend:
 
     def _send_python_code(self, code):
         cmd = self.shell + self.args + [self.python_path]
-        return check_output(cmd, universal_newlines=True, input=code)
+        return self._check_output(cmd, universal_newlines=True, input=code)
 
     def _send_cmd(self, cmd, *args, **kwargs):
         if not self.send_receiver_class:
@@ -347,7 +347,7 @@ class ShellCommandSend:
         py_cmd += ", ".join(f'{k}={self._format_for_python(v)}' for k, v in kwargs.items())
         py_cmd += ")"
         cmd = self.shell + self.args + [self.python_path]
-        return check_output(cmd, universal_newlines=True, input=py_cmd)
+        return self._check_output(cmd, universal_newlines=True, input=py_cmd)
 
     def initialize(self):
         """initialize necessary variables by sending an echo command that works on all OS and shells"""
@@ -421,12 +421,17 @@ class ShellCommandSend:
         return self._runs_successful(cmd)
 
     def check_output(self, cmd):
-        """generic subprocess.check_output call but using the shell connection"""
+        """subprocess.check_output call using the shell connection"""
         full_cmd = self.shell + self.args + self._as_list(cmd)
         return self._check_output(full_cmd)
 
+    def check_output_python_module(self, module_params):
+        """subprocess.check_output call based on python module call"""
+        cmd = self.shell + self.args + [self.python_path, "-m"] + self._as_list(module_params)
+        return self._check_output(cmd)
+
     def check_output_python_code(self, python_code):
-        """generic subprocess.check_output call and running the provided python code"""
+        """subprocess.check_output call running the provided python code"""
         return self._send_python_code(python_code)
 
     def cmd_start(self, cmd, env=None, output_file=None, log=None):
