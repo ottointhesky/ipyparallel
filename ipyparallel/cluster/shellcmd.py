@@ -342,7 +342,7 @@ class ShellCommandSend:
         if 'remote_pid' in values:
             return int(values['remote_pid'])
         else:
-            raise RuntimeError(f"Failed to get pid for {cmd}: {output}")
+            raise RuntimeError(f"Failed to get pid from output: {output}")
 
     def initialize(self):
         """initialize necessary variables by sending an echo command that works on all OS and shells"""
@@ -491,7 +491,9 @@ class ShellCommandSend:
         # quoting strategy. We do not check the length of the code, which could exceed the shell parameter
         # string limit. Since the limit is typically > 2k, little code snippets should not cause any problems.
         encoded = base64.b64encode(python_code.encode())
-        py_cmd = f'"import base64;exec(base64.b64decode({encoded}).decode())"'
+        py_cmd = f'import base64;exec(base64.b64decode({encoded}).decode())'
+        if not self.is_linux:
+            py_cmd = '"'+py_cmd+'"'
         paramlist = [self.python_path, "-c", py_cmd]
         return self._get_pid(self._cmd_send("start", paramlist, env=env, output_file=output_file))
 
@@ -543,18 +545,5 @@ class ShellCommandSend:
         output = self._cmd_send("remove", p)
 
 
-import sys
-sender = ShellCommandSend(["cmd.exe"], ["/C"], sys.executable, send_receiver_class=True)
-
-sender.check_output('echo "test-line" > d:\\stdout.txt')
-
-pid = sender.cmd_start_python_code("import time;print('start waiting...');time.sleep(10);print('finished')", output_file="d:\stdout.txt")
-#pid = sender.cmd_start_python_code("print('start waiting...')", output_file="d:\stdout.txt")
-
-while sender.cmd_running(pid):
-    print(f"Wait for pid={pid} to finished...")
-    time.sleep(1)
-    sender.cmd_kill(pid)
-
-assert sender.cmd_running(pid) == False
-print(f"pid={pid} finished.")
+# sender = ShellCommandSend(["/usr/bin/bash"], ["-c"], "python3", send_receiver_class=1)
+# pid = sender.cmd_start_python_code( "print('hallo johannes')", output_file="~/output.txt" )
