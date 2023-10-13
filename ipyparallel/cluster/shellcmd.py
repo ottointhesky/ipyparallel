@@ -544,6 +544,8 @@ class ShellCommandSend:
         assert self.shell_info  # make sure that initialize was called already
         output = self._cmd_send("remove", p)
 
-
-# sender = ShellCommandSend(["/usr/bin/bash"], ["-c"], "python3", send_receiver_class=1)
-# pid = sender.cmd_start_python_code( "print('hallo johannes')", output_file="~/output.txt" )
+# test some test code, which can be removed later on
+# import sys
+# sender = ShellCommandSend(["cmd.exe"], ["/C"], sys.executable, send_receiver_class=1)
+# sender = ShellCommandSend(["/usr/bin/bash"], ["-c"], sys.executable, send_receiver_class=1)
+# pid = sender.cmd_start_python_code( "print('hallo johannes')", output_file="output.txt" )
