@@ -1292,15 +1292,8 @@ class SSHLauncher(LocalProcessLauncher):
         ipython_installed = self.ssh_sender.check_ipython_package()
 
         # create remote profile dir
-        self.ssh_sender.check_output_python(["-m", "IPython", "profile", "create", "--profile-dir", self.remote_profile_dir])
+        self.ssh_sender.check_output([self.ssh_sender.python_path, "-m", "IPython", "profile", "create", "--profile-dir", self.remote_profile_dir])
         self.send_files()
-        #self.pid = sshx(
-        #    self.ssh_cmd + self.ssh_args + [self.location],
-        #    self.program + self.program_args,
-        #    env=self.get_env(),
-        #    remote_output_file=self.remote_output_file,
-        #    log=self.log,
-        #)
         self.pid = self.ssh_sender.cmd_start(self.program + self.program_args, env=self.get_env(), output_file=self.remote_output_file)
         if self.log:
             remote_cmd = ' '.join(self.program + self.program_args)
@@ -1348,7 +1341,7 @@ class SSHLauncher(LocalProcessLauncher):
         # out = check_output(full_cmd, input=None, start_new_session=True).decode(
         #     "utf8", "replace"
         # )
-        out = self._secure_ssh_sender().check_output_python(["-c", f'"{python_code}"'])
+        out = self._secure_ssh_sender().check_output_python_code(python_code)
         values = _ssh_outputs(out)
         if 'process_running' not in values:
             raise RuntimeError(out)
