@@ -20,7 +20,7 @@ jobs:
       - name: Compose win-sshd docker containter
         run: |
           # compose docker container
-          cd ci/ssh-win
+          cd ci/ssh
           docker compose up -d --build
           
           # retrieve id_rsa file for public key authentication
