@@ -112,7 +112,7 @@ jobs:
       - name: install ipyparallel
         if: always()
         run: |
-          pip install -e file://D:\a\ipyparallel\ipyparallel#egg=ipyparallel[test]"
+          pip install -e "file://D:\a\ipyparallel\ipyparallel#egg=ipyparallel[test]"
           pip show ipyparallel
 
       - name: ipyparallel test
