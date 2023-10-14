@@ -115,7 +115,8 @@ jobs:
           pip install -e "file://D:\a\ipyparallel\ipyparallel#egg=ipyparallel[test]"
           pip show ipyparallel
 
-      - name: ipyparallel test
+      - name: shellcm test
         if: always()
+        working-directory: D:\a\ipyparallel\ipyparallel
         run: |
-          python -c "import ipyparallel"
+          pytest -v ipyparallel\tests\test_shellcmd.py
