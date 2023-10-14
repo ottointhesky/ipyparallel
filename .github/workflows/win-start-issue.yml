@@ -17,15 +17,15 @@ jobs:
       #    docker version
       #    docker images
 
-      - name: Compose win-sshd docker containter
-        run: |
-          # compose docker container
-          cd ci/ssh
-          docker compose up -d --build
-          
-          # retrieve id_rsa file for public key authentication
-          mkdir $env:USERPROFILE/.ssh/
-          docker run ipyparallel-sshd powershell.exe -Command "type C:\Users\ciuser\.ssh\id_rsa" | out-file -encoding ascii $env:USERPROFILE/.ssh/id_rsa
+      #- name: Compose win-sshd docker containter
+      #  run: |
+      #    # compose docker container
+      #    cd ci/ssh
+      #    docker compose up -d --build
+      #    
+      #    # retrieve id_rsa file for public key authentication
+      #    mkdir $env:USERPROFILE/.ssh/
+      #    docker run ipyparallel-sshd powershell.exe -Command "type C:\Users\ciuser\.ssh\id_rsa" | out-file -encoding ascii $env:USERPROFILE/.ssh/id_rsa
 
       #- name: old way ssh connection and copy files
       #  run: |
@@ -48,7 +48,7 @@ jobs:
       #    ssh ciuser@localhost -p 2222 dir c:\src\ipyparallel
       #    ssh ciuser@localhost -p 2222 "cd c:\src\ipyparallel && pip install -e ."
 
-      - name: ssh connection and copy files
+      - name: Set up docker-compose for ssh windows launcher
         env: 
             SSH_HOST : ciuser@127.0.0.1
             SSH_PORT : 2222
