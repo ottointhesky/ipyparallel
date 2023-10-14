@@ -102,3 +102,15 @@ jobs:
         run: |
           python --version
           python -c "import sys;print(sys.executable)"
+          dir D:\a\ipyparallel\ipyparallel
+
+      - name: install ipyparallel
+        if: always()
+        working-directory: D:\a\ipyparallel\ipyparallel
+        run: |
+          pip install -e .
+
+      - name: ipyparallel test
+        if: always()
+        run: |
+          python -c "import ipyparallel"
