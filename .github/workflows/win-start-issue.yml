@@ -49,6 +49,7 @@ jobs:
       #    ssh ciuser@localhost -p 2222 "cd c:\src\ipyparallel && pip install -e ."
 
       - name: Set up docker-compose for ssh windows launcher
+        if: false   #disable docker build for now 
         env: 
             SSH_HOST : ciuser@127.0.0.1
             SSH_PORT : 2222
@@ -83,7 +84,7 @@ jobs:
           
 
       - name: check docker ipyparallel
-        if: always()
+        if: false # always()
         run: |
           # check environment
           ssh ciuser@127.0.0.1 -p 2222 pip freeze
@@ -92,14 +93,12 @@ jobs:
           ssh ciuser@127.0.0.1 -p 2222 ipcluster -h
 
       - name: initialization command
-        if: always()
+        if: false #always()
         run: |
           ssh -p 2222 ciuser@127.0.0.1 echo "OS-WIN-CMD=%OS%;OS-WIN-PW=$env:OS;OS-LINUX=$OSTYPE;SHELL=$SHELL"
 
       - name: local python test
         if: always()
         run: |
-          python <<EOF
-          import sys
-          print(sys.executable)
-          EOF
+          python --version
+          python -c "import sys;print(sys.executable)"
