@@ -33,9 +33,20 @@ def print_output(output_file):
     print(f"End of file ({output_file})\n")
 
 
-run_process(["cmd.exe", "/c", "echo flag=0"], flags=0, output_file="output1.txt" )
-print_output("output1.txt")
-run_process(["cmd.exe", "/c", "echo flag=break"], flags=(CREATE_BREAKAWAY_FROM_JOB), output_file="output3.txt" )
-print_output("output3.txt")
-run_process(["cmd.exe", "/c", "echo flag=all"], flags=(CREATE_NEW_CONSOLE | CREATE_BREAKAWAY_FROM_JOB), output_file="output2.txt" )
-print_output("output2.txt")
+def run(idx, cmd, flags):
+    f = f"output{idx}.txt"
+    try:
+        print(f"------------------------------------------")
+        print(f"Executing command {idx}:'{cmd}' with flags={flags}")
+        run_process(["cmd.exe", "/c", cmd], flags=flags, output_file=f)
+        print(f"command successful!")
+        print_output(f)
+    except Exception as e:
+        print(f"error running '{cmd}'")
+        print(str(e))
+
+
+run(1, "echo flag=0", flags=0)
+run(2, "echo flag=break", flags=(CREATE_BREAKAWAY_FROM_JOB))
+run(3, "echo flag=all", flags=(CREATE_NEW_CONSOLE | CREATE_BREAKAWAY_FROM_JOB))
+
