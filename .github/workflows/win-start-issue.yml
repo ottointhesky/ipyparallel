@@ -109,14 +109,19 @@ jobs:
           python -c "import sys;print(sys.executable)"
           dir D:\a\ipyparallel\ipyparallel
 
-      - name: install ipyparallel
-        if: always()
-        run: |
-          pip install -e "file://D:\a\ipyparallel\ipyparallel#egg=ipyparallel[test]"
-          pip show ipyparallel
-
-      - name: shellcm test
-        if: always()
+      - name: process start tests
         working-directory: D:\a\ipyparallel\ipyparallel
         run: |
-          pytest -v ipyparallel\tests\test_shellcmd.py
+          python ipyparallel\cluster\win-start_issue.py
+
+      #- name: install ipyparallel
+      #  if: always()
+      #  run: |
+      #    pip install -e "file://D:\a\ipyparallel\ipyparallel#egg=ipyparallel[test]"
+      #    pip show ipyparallel
+      #
+      #- name: shellcmd test
+      #  if: always()
+      #  working-directory: D:\a\ipyparallel\ipyparallel
+      #  run: |
+      #    pytest -v ipyparallel\tests\test_shellcmd.py
