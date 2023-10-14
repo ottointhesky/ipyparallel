@@ -35,5 +35,7 @@ def print_output(output_file):
 
 run_process(["cmd.exe", "/c", "echo flag=0"], flags=0, output_file="output1.txt" )
 print_output("output1.txt")
+run_process(["cmd.exe", "/c", "echo flag=break"], flags=(CREATE_BREAKAWAY_FROM_JOB), output_file="output3.txt" )
+print_output("output3.txt")
 run_process(["cmd.exe", "/c", "echo flag=all"], flags=(CREATE_NEW_CONSOLE | CREATE_BREAKAWAY_FROM_JOB), output_file="output2.txt" )
 print_output("output2.txt")
