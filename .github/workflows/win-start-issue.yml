@@ -92,6 +92,11 @@ jobs:
           # send test command
           ssh ciuser@127.0.0.1 -p 2222 ipcluster -h
 
+      - name: Install Python 3.8
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.8
+
       - name: initialization command
         if: false #always()
         run: |
@@ -106,9 +111,9 @@ jobs:
 
       - name: install ipyparallel
         if: always()
-        working-directory: D:\a\ipyparallel\ipyparallel
         run: |
-          pip install -e .
+          pip install -e file://D:\a\ipyparallel\ipyparallel#egg=ipyparallel[test]"
+          pip show ipyparallel
 
       - name: ipyparallel test
         if: always()
