@@ -5,21 +5,14 @@ from subprocess import DEVNULL
 import time
 
 def run_process(start_cmd, flags=0, output_file=None):
-    #flags = 0
-    #flags |= CREATE_NEW_CONSOLE
-    #flags |= CREATE_BREAKAWAY_FROM_JOB
-
-    pkwargs = {
-        'close_fds': True,  # close stdin/stdout/stderr on child
-        'creationflags': flags
-    }
+    pkwargs ={}
     if output_file:
         fo = open(output_file, "w")
         pkwargs['stdout'] = fo
         pkwargs['stderr'] = fo
         pkwargs['stdin'] = DEVNULL
 
-    p = Popen(start_cmd, **pkwargs)
+    p = Popen(start_cmd, close_fds=True, creationflags=flags, **pkwargs)
 
     print(f'__remote_pid={p.pid}__')
     return
@@ -29,7 +22,7 @@ def print_output(output_file):
     print(f"print of file {output_file}:")
     with open(output_file, "r") as f:
         for idx, l in enumerate(f):
-            print(f"{(idx+1):3}:{l}")
+            print(f"{(idx+1):3}:{l}",end="")
     print(f"End of file ({output_file})\n")
 
 
@@ -47,6 +40,7 @@ def run(idx, cmd, flags):
 
 
 run(1, "echo flag=0", flags=0)
-run(2, "echo flag=break", flags=(CREATE_BREAKAWAY_FROM_JOB))
+# the following two command do not work in a github runner vm (see https://github.com/actions/runner/issues/595)
+run(2, "echo flag=break", flags=CREATE_BREAKAWAY_FROM_JOB)
 run(3, "echo flag=all", flags=(CREATE_NEW_CONSOLE | CREATE_BREAKAWAY_FROM_JOB))
 
