@@ -1,6 +1,7 @@
 from subprocess import Popen
 from subprocess import CREATE_NEW_CONSOLE
 from subprocess import CREATE_BREAKAWAY_FROM_JOB
+from subprocess import DETACHED_PROCESS
 from subprocess import DEVNULL
 import time
 
@@ -43,4 +44,5 @@ run(1, "echo flag=0", flags=0)
 # the following two command do not work in a github runner vm (see https://github.com/actions/runner/issues/595)
 run(2, "echo flag=break", flags=CREATE_BREAKAWAY_FROM_JOB)
 run(3, "echo flag=all", flags=(CREATE_NEW_CONSOLE | CREATE_BREAKAWAY_FROM_JOB))
+run(4, "echo flag=detach", flags=DETACHED_PROCESS)
 
