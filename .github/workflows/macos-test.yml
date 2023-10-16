@@ -1,0 +1,22 @@
+name: macos-test 
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: macos-11
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Install Python 3.9
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.9
+
+      - name: Infos about macos
+        run: |
+          echo "OS-WIN-CMD=%OS%;OS-WIN-PW=$env:OS;OS-LINUX=$OSTYPE;SHELL=$SHELL"
+          python3 -c "import os;print(os.name)"
