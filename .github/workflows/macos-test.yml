@@ -16,9 +16,30 @@ jobs:
         with:
           python-version: 3.9
 
+      - name: Install ipyparallel itself
+        run: |
+          pip install --upgrade pip
+          pip install --no-deps .
+
+      - name: Install Python dependencies
+        run: |
+          pip install --pre --upgrade ipyparallel[test]          
+
+      - name: Install extra Python packages
+        run: |
+          pip install distributed joblib
+          pip install --only-binary :all: matplotlib || echo "no matplotlib"
+
+      - name: Show environment
+        run: pip freeze
+
       - name: Infos about macos
         run: |
           echo "OS-WIN-CMD=%OS%;OS-WIN-PW=$env:OS;OS-LINUX=$OSTYPE;SHELL=$SHELL"
           python3 -c "import os;print(os.name)"
           python3 -c "import sys;print(sys.platform)"
           python3 -c "import sys;print(sys.platform.lower())"
+
+      - name: Test shellcmd
+        run: |
+          pytest -v --maxfail=2 ipyparallel/tests/test_shellcmd.py
