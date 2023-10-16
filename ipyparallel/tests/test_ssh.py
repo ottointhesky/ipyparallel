@@ -1,6 +1,5 @@
 from functools import partial
 import os
-
 import pytest
 from traitlets.config import Config
 
@@ -15,19 +14,21 @@ from .test_cluster import test_to_from_dict  # noqa: F401
 
 
 @pytest.fixture(params=["SSH", "SSHProxy"])
-def ssh_config(request):
+def ssh_config(ssh_dir, request):
     windows = True if os.name == "nt" else False
 
     if windows and request.param == "SSHProxy":     # SSHProxy currently not working under Windows
         pytest.skip("Proxy tests currently not working under Windows")
 
+    if windows and "GITHUB_RUNNER" in os.environ:
+        pytest.skip("Disable windows ssh tests in github runners")
+
     c = Config()
     c.Cluster.controller_ip = '0.0.0.0'
     c.Cluster.engine_launcher_class = request.param
     engine_set_cfg = c[f"{request.param}EngineSetLauncher"]
-    engine_set_cfg.ssh_args = []    # ssh connection must work without parameters (secured by github workflow scripts)
+    engine_set_cfg.ssh_args = []
     engine_set_cfg.scp_args = list(engine_set_cfg.ssh_args)  # copy
-    # it's actually the ssh server platform that is relevant, not the current host. should be improved!
     if windows:
         engine_set_cfg.remote_python = "python"
         engine_set_cfg.remote_profile_dir = "C:/Users/ciuser/.ipython/profile_default"
