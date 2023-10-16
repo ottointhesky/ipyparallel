@@ -21,3 +21,4 @@ jobs:
           echo "OS-WIN-CMD=%OS%;OS-WIN-PW=$env:OS;OS-LINUX=$OSTYPE;SHELL=$SHELL"
           python3 -c "import os;print(os.name)"
           python3 -c "import sys;print(sys.platform)"
+          python3 -c "import sys;print(sys.platform.lower())"
