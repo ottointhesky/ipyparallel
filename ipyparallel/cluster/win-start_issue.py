@@ -54,7 +54,11 @@ print("Check for BREAKAWAY flag support")
 cmd = ["python", "-c",
                "import subprocess; subprocess.Popen(['cmd.exe', '/C'], close_fds=True, \
                creationflags=subprocess.CREATE_BREAKAWAY_FROM_JOB);print('successful')"]
-output = check_output(cmd).decode('utf8', 'replace').strip()
+try:
+    output = check_output(cmd).decode('utf8', 'replace').strip()
+except Exception:
+    output = ""
+
 if output == "successful":
     print("BREAKAWAY supported")
 else:
