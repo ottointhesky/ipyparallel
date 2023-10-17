@@ -1,9 +1,11 @@
 from subprocess import Popen
+from subprocess import check_output
 from subprocess import CREATE_NEW_CONSOLE
 from subprocess import CREATE_BREAKAWAY_FROM_JOB
 from subprocess import DETACHED_PROCESS
 from subprocess import DEVNULL
 import time
+
 
 def run_process(start_cmd, flags=0, output_file=None):
     pkwargs ={}
@@ -17,6 +19,7 @@ def run_process(start_cmd, flags=0, output_file=None):
 
     print(f'__remote_pid={p.pid}__')
     return
+
 
 def print_output(output_file):
     time.sleep(1)
@@ -38,7 +41,6 @@ def run(idx, cmd, flags):
     except Exception as e:
         print(f"error running '{cmd}'")
         print(str(e))
-
 
 
 run(1, "echo flag=0", flags=0)
