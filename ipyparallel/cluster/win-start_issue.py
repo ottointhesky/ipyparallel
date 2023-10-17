@@ -40,9 +40,20 @@ def run(idx, cmd, flags):
         print(str(e))
 
 
+
 run(1, "echo flag=0", flags=0)
 # the following two command do not work in a github runner vm (see https://github.com/actions/runner/issues/595)
 run(2, "echo flag=break", flags=CREATE_BREAKAWAY_FROM_JOB)
 run(3, "echo flag=all", flags=(CREATE_NEW_CONSOLE | CREATE_BREAKAWAY_FROM_JOB))
 run(4, "echo flag=detach", flags=DETACHED_PROCESS)
 
+print("------------------------------------------")
+print("Check for BREAKAWAY flag support")
+cmd = ["python", "-c",
+               "import subprocess; subprocess.Popen(['cmd.exe', '/C'], close_fds=True, \
+               creationflags=subprocess.CREATE_BREAKAWAY_FROM_JOB);print('successful')"]
+output = check_output(cmd).decode('utf8', 'replace').strip()
+if output == "successful":
+    print("BREAKAWAY supported")
+else:
+    print("BREAKAWAY NOT supported")
