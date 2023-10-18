@@ -161,12 +161,12 @@ jobs:
       - name: Run ${{ matrix.cluster_type }} shellcmd tests
         if: ${{ matrix.cluster_type }}
         run: |
-          echo "${EXEC:-} pytest -v --maxfail=2 --cov=ipyparallel ipyparallel/tests/test_shellcmd.py"
+          ${EXEC:-} pytest -v --maxfail=2 --cov=ipyparallel ipyparallel/tests/test_shellcmd.py
 
       - name: Run ${{ matrix.cluster_type }} tests
         if: ${{ matrix.cluster_type }}
         run: |
-          echo "${EXEC:-} pytest -v --maxfail=2 --cov=ipyparallel ipyparallel/tests/test_${{ matrix.cluster_type }}.py"
+          ${EXEC:-} pytest -v --maxfail=2 --cov=ipyparallel ipyparallel/tests/test_${{ matrix.cluster_type }}.py
 
-      - name: Submit codecov report
-        uses: codecov/codecov-action@v3
+      #- name: Submit codecov report
+      #  uses: codecov/codecov-action@v3
