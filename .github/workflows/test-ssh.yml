@@ -107,7 +107,7 @@ jobs:
           
           # pip install ipyparallel files
           ssh ciuser@localhost -p 2222 dir c:\src\ipyparallel
-          ssh ciuser@localhost -p 2222 "cd c:\src\ipyparallel && pip install -e ."
+          ssh ciuser@localhost -p 2222 "pip install -e file://c:/src/ipyparallel#egg=ipyparallel[test]"
           
           
       - name: Set up slurm
