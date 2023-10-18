@@ -87,7 +87,7 @@ jobs:
           ssh_host: "127.0.0.1"
           ssh_port: "2222"
           ssh_user: ciuser
-	run: |
+        run: |
           cd ci/ssh
           docker-compose -f win_docker-compose.yaml up -d --build
           
