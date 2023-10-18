@@ -79,7 +79,7 @@ jobs:
           cat ~/.ssh/id_rsa
           
           #check ssh connection and accept host key
-          ssh -o "StrictHostKeyChecking no" ciuser@localhost -p 2222 -v ls /
+          ssh -o "StrictHostKeyChecking no" ciuser@127.0.0.1 -p 2222 -v ls /
 
       - name: Set up docker-compose for ssh windows launcher
         if: ${{ matrix.cluster_type == 'ssh' && contains(matrix.runs_on, 'windows') }}
