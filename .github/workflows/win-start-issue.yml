@@ -15,9 +15,13 @@ jobs:
         run: |
           (get-command ssh.exe).Path
           dir C:\Windows\System32\OpenSSH
-          (get-command choco.exe).Path
+          (get-command ssh.exe)
+          echo "choco list"
           choco list
+          echo "Get-Package"
           Get-Package
+          echo "choco install openssh --pre"
+          choco install openssh --pre
       
       #- name: Check Hyper-V and Docker
       #  run: |
