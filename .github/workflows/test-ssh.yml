@@ -19,7 +19,7 @@ env:
 jobs:
   test:
     runs-on: ${{ matrix.runs_on || 'ubuntu-20.04' }}
-    timeout-minutes: 20
+    timeout-minutes: 50
 
     strategy:
       # Keep running even if one variation of the job fail
@@ -79,12 +79,16 @@ jobs:
           cat ~/.ssh/id_rsa
           
           #check ssh connection and accept host key
-          ssh -o "StrictHostKeyChecking no" ciuser@localhost -p 2222 -v ls /
+          ssh -o "StrictHostKeyChecking no" ciuser@127.0.0.1 -p 2222 -v ls /
 
       - name: Set up docker-compose for ssh windows launcher
         if: ${{ matrix.cluster_type == 'ssh' && contains(matrix.runs_on, 'windows') }}
+        env: 
+            SSH_HOST : ciuser@127.0.0.1
+            SSH_PORT : 2222
+            CODE_ROOT : c:\src\ipyparallel
         run: |
-          cd ci/ssh-win
+          cd ci/ssh
           docker-compose -f win_docker-compose.yaml up -d --build
           
           # retrieve id_rsa file for public key authentication
@@ -92,22 +96,31 @@ jobs:
           docker run ipyparallel-sshd powershell.exe -Command "type C:\Users\ciuser\.ssh\id_rsa" | out-file -encoding ascii $env:USERPROFILE/.ssh/id_rsa
           
           #check ssh connection and accept host key
-          ssh -o "StrictHostKeyChecking no" ciuser@localhost -p 2222 -v ls c:\
+          ssh -o "StrictHostKeyChecking no" $env:SSH_HOST -p $env:SSH_PORT -v dir c:\
           
           # copy ipyparallel code to docker container (use zip, scp and unzip)
-          ssh ciuser@localhost -p 2222 mkdir c:\src\ipyparallel
-          # zip ipyparallel files (excluding file might not be needed)
+          ssh $env:SSH_HOST -p $env:SSH_PORT mkdir $env:CODE_ROOT
+          
+          # zip ipyparallel files (excluding files probably not needed)
+          cd ../..
           $exclude = @("__pycache__","node_modules")
           $files = Get-ChildItem -Path "." -Exclude $exclude
           Compress-Archive -Path $files -DestinationPath ipyparallel.zip -CompressionLevel Fastest
           # copy file into docker (we need to do it over ssh since docker copy or mount doesn't work in Hyper-V)
-          scp -P 2222 ipyparallel.zip ciuser@localhost:c:\src\ipyparallel
+          scp -P $env:SSH_PORT ipyparallel.zip ${env:SSH_HOST}:${env:CODE_ROOT}
           # deflate ipyparallel files
-          ssh ciuser@localhost -p 2222 powershell.exe -Command "Expand-Archive -Path c:\src\ipyparallel\ipyparallel.zip -DestinationPath c:\src\ipyparallel"
+          ssh $env:SSH_HOST -p $env:SSH_PORT powershell.exe -Command "Expand-Archive -Path $env:CODE_ROOT\ipyparallel.zip -DestinationPath $env:CODE_ROOT"
           
           # pip install ipyparallel files
-          ssh ciuser@localhost -p 2222 dir c:\src\ipyparallel
-          ssh ciuser@localhost -p 2222 "cd c:\src\ipyparallel && pip install -e ."
+          #ssh $env:SSH_HOST -p $env:SSH_PORT "cd $env:CODE_ROOT && pip install -e ."
+          ssh $env:SSH_HOST -p $env:SSH_PORT "pip install -e file://c:/src/ipyparallel#egg=ipyparallel[test]"
+
+          #test how fast the ssh connrection is
+          Get-Date -Format G
+          ssh $env:SSH_HOST -p $env:SSH_PORT 'echo "OS-WIN-CMD=%OS%;OS-WIN-PW=$env:OS;OS-LINUX=$OSTYPE;SHELL=$SHELL"'
+          Get-Date -Format G
+          python -c "from subprocess import check_output;print(check_output(['ssh','-p','2222','ciuser@127.0.0.1','echo \'OS-WIN-CMD=%OS%;OS-WIN-PW=$env:OS;OS-LINUX=$OSTYPE;SHELL=$SHELL\'']))"
+          Get-Date -Format G
           
           
       - name: Set up slurm
@@ -160,12 +173,12 @@ jobs:
       - name: Run ${{ matrix.cluster_type }} shellcmd tests
         if: ${{ matrix.cluster_type }}
         run: |
-          echo "${EXEC:-} pytest -v --maxfail=2 --cov=ipyparallel ipyparallel/tests/test_shellcmd.py"
+          pytest -v --maxfail=2 --cov=ipyparallel ipyparallel/tests/test_shellcmd.py
 
       - name: Run ${{ matrix.cluster_type }} tests
         if: ${{ matrix.cluster_type }}
         run: |
-          echo "${EXEC:-} pytest -v --maxfail=2 --cov=ipyparallel ipyparallel/tests/test_${{ matrix.cluster_type }}.py"
+          pytest -v --maxfail=2 --cov=ipyparallel ipyparallel/tests/test_${{ matrix.cluster_type }}.py
 
-      - name: Submit codecov report
-        uses: codecov/codecov-action@v3
+      #- name: Submit codecov report
+      #  uses: codecov/codecov-action@v3
