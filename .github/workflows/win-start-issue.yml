@@ -13,20 +13,20 @@ jobs:
       
       - name: ssh check
         run: |
-          (get-command ssh.exe).Path
-          dir C:\Windows\System32\OpenSSH
-          ssh.exe -V
-          echo "choco list"
-          choco list
-          echo "choco install openssh --pre"
+          #(get-command ssh.exe).Path
+          #dir C:\Windows\System32\OpenSSH
+          #ssh.exe -V
+          #echo "choco list"
+          #choco list
+          #echo "choco install openssh --pre"
           choco install openssh --pre
-          Write-Output "------------------------- $env:Path"
-          $env:Path
-          Write-Output "------------------------- chocolateyProfile"
-          Import-Module $env:ChocolateyInstall\helpers\chocolateyProfile.psm1
-          Write-Output "------------------------- $env:Path"
-          $env:Path
-          Write-Output "------------------------- (get-command ssh.exe)"
+          #Write-Output "------------------------- $env:Path"
+          #$env:Path
+          #Write-Output "------------------------- chocolateyProfile"
+          #Import-Module $env:ChocolateyInstall\helpers\chocolateyProfile.psm1
+          #Write-Output "------------------------- $env:Path"
+          #$env:Path
+          #Write-Output "------------------------- (get-command ssh.exe)"
           ssh.exe -V
           mv C:\Windows\System32\OpenSSH C:\Windows\System32\_OpenSSH
           ssh.exe -V
