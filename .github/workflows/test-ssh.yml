@@ -94,7 +94,11 @@ jobs:
           # retrieve id_rsa file for public key authentication
           mkdir $env:USERPROFILE/.ssh/
           docker run ipyparallel-sshd powershell.exe -Command "type C:\Users\ciuser\.ssh\id_rsa" | out-file -encoding ascii $env:USERPROFILE/.ssh/id_rsa
-          
+
+          # install newer version of openssh (removes connection errors in pytest)
+          choco install openssh --pre
+          mv C:\Windows\System32\OpenSSH C:\Windows\System32\_OpenSSH
+
           #check ssh connection and accept host key
           ssh -o "StrictHostKeyChecking no" $env:SSH_HOST -p $env:SSH_PORT -v dir c:\
           
