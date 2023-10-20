@@ -20,12 +20,17 @@ jobs:
           choco list
           echo "choco install openssh --pre"
           choco install openssh --pre
+          Write-Output "------------------------- $env:Path"
+          $env:Path
+          Write-Output "------------------------- refreshenv"
           refreshenv
-          Write-Output "(get-command ssh.exe)"
+          Write-Output "------------------------- $env:Path"
+          $env:Path
+          Write-Output "------------------------- (get-command ssh.exe)"
           (get-command ssh.exe)
           #Write-Output "(C:\Program Files\OpenSSH-Win64\ssh.exe)"
           #(get-command "C:\Program Files\OpenSSH-Win64\ssh.exe")
-          $env:Path
+          #$env:Path
       
       #- name: Check Hyper-V and Docker
       #  run: |
