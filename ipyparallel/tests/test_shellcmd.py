@@ -32,12 +32,6 @@ sender_ids = [ "cmd", "cmd_src", "pwsh", "pwsh_src", "ssh-win", "ssh-win_src", "
                "bash", "bash_src", "ssh-linux", "ssh-linux_src",
                "bash-macos", "bash-macos_src"]
 
-def simple_ssh_test_first():
-    run(["ssh", "-v", "-p", "2222", "ciuser@127.0.0.1", "echo johannes"], timeout=10)
-    run(["ssh", "-v", "-T", "-p", "2222", "ciuser@127.0.0.1", "echo johannes2"], timeout=10)
-    run(["ssh", "-v", "-n", "-p", "2222", "ciuser@127.0.0.1", "echo johannes3"], timeout=10)
-    return
-
 @pytest.fixture
 def shellcmd_test_cmd():
     """returns a command that runs for 5 seconds"""
@@ -88,13 +82,6 @@ def test_shellcmds(platform, sender, shellcmd_test_cmd, ssh_running):
         pytest.skip("No ssh server running")
 
     # start tests
-    if 'ssh' in sender.shell and ssh_running:
-        simple_ssh_test_first()
-        sender.initialize()
-        return
-    else:
-        pytest.skip("skip for now")
-
 
     # initialize sender class
     sender.initialize()
