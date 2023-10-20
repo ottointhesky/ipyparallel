@@ -33,8 +33,9 @@ sender_ids = [ "cmd", "cmd_src", "pwsh", "pwsh_src", "ssh-win", "ssh-win_src", "
                "bash-macos", "bash-macos_src"]
 
 def simple_ssh_test_first():
-    run(["ssh", "-v", "-o", "StrictHostKeyChecking=no", "-p", "2222", "ciuser@127.0.0.1", "echo johannes"], timeout=10)
-    run(["ssh", "-v", "-p", "2222", "ciuser@127.0.0.1", "echo johannes2"], timeout=10)
+    run(["ssh", "-v", "-n", "-T", "-p", "2222", "ciuser@127.0.0.1", "echo johannes"], timeout=10)
+    run(["ssh", "-v", "-T", "-p", "2222", "ciuser@127.0.0.1", "echo johannes2"], timeout=10)
+    run(["ssh", "-v", "-n", "-p", "2222", "ciuser@127.0.0.1", "echo johannes3"], timeout=10)
     return
 
 @pytest.fixture
