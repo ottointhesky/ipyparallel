@@ -18,10 +18,10 @@ jobs:
           (get-command ssh.exe)
           echo "choco list"
           choco list
-          echo "Get-Package"
-          Get-Package
-          echo "choco install openssh --pre"
-          choco install openssh --pre
+          echo "choco install openssh"
+          choco install openssh
+          (get-command ssh.exe)
+          (get-command C:\Program Files\OpenSSH-Win64\ssh.exe)
       
       #- name: Check Hyper-V and Docker
       #  run: |
