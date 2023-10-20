@@ -15,19 +15,21 @@ jobs:
         run: |
           (get-command ssh.exe).Path
           dir C:\Windows\System32\OpenSSH
-          (get-command ssh.exe)
+          ssh.exe -V
           echo "choco list"
           choco list
           echo "choco install openssh --pre"
           choco install openssh --pre
           Write-Output "------------------------- $env:Path"
           $env:Path
-          Write-Output "------------------------- refreshenv"
-          refreshenv
+          Write-Output "------------------------- chocolateyProfile"
+          Import-Module $env:ChocolateyInstall\helpers\chocolateyProfile.psm1
           Write-Output "------------------------- $env:Path"
           $env:Path
           Write-Output "------------------------- (get-command ssh.exe)"
-          (get-command ssh.exe)
+          ssh.exe -V
+          mv C:\Windows\System32\OpenSSH C:\Windows\System32\_OpenSSH
+          ssh.exe -V
           #Write-Output "(C:\Program Files\OpenSSH-Win64\ssh.exe)"
           #(get-command "C:\Program Files\OpenSSH-Win64\ssh.exe")
           #$env:Path
