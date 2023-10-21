@@ -19,6 +19,7 @@ import shlex
 import base64
 import enum
 from tempfile import NamedTemporaryFile
+from datetime import datetime
 
 class Platform(enum.Enum):
     Unknown = 0,
@@ -385,10 +386,11 @@ class ShellCommandSend:
             # simple python code that starts the actual cmd in a non detachted
             cmd_args_str = ", ".join(f'{self._format_for_python(c)}' for c in cmd_args)
             py_detached = f"from subprocess import Popen,PIPE;fo=open(r'{fo_name}','w');" \
-                          f"fi=open(r'{fi_name}','r');input=fi.read();"\
+                          f"fi=open(r'{fi_name}','r');input=fi.read();del fi;"\
                           f"p=Popen(["+cmd_args_str+"], stdin=PIPE, stdout=fo, stderr=fo, universal_newlines=True);" \
                           f"p.stdin.write(input);p.stdin.flush();p.communicate()"
             # now start proxy process detached
+            print(datetime.now(), " [py_detached] ", py_detached)
             p = Popen([sys.executable, '-c', py_detached], close_fds=True, creationflags=DETACHED_PROCESS)
 
             # retrieve (remote) pid from output file
