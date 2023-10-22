@@ -95,7 +95,7 @@ jobs:
           mkdir $env:USERPROFILE/.ssh/
           docker run ipyparallel-sshd powershell.exe -Command "type C:\Users\ciuser\.ssh\id_rsa" | out-file -encoding ascii $env:USERPROFILE/.ssh/id_rsa
 
-          # install newer version of openssh (removes connection errors in pytest)
+          # install newer version of openssh (removes "GetConsoleMode on STD_INPUT_HANDLE failed with 6" error in pytest)
           choco install openssh --pre
           mv C:\Windows\System32\OpenSSH C:\Windows\System32\_OpenSSH
 
@@ -180,9 +180,19 @@ jobs:
           pytest -v --maxfail=2 --cov=ipyparallel ipyparallel/tests/test_shellcmd.py
 
       - name: Run ${{ matrix.cluster_type }} tests
-        if: ${{ matrix.cluster_type }}
+        if: ${{ matrix.cluster_type && contains(matrix.runs_on, 'windows')}}
+        env:
+          SHELLCMD_LOG_PREFIX: "c:\\"
         run: |
           pytest -v --maxfail=2 --cov=ipyparallel ipyparallel/tests/test_${{ matrix.cluster_type }}.py
+
+      - name: Output shellcmd logs
+        if: always() && ${{ matrix.cluster_type == 'ssh' && contains(matrix.runs_on, 'windows') }}
+        run: |
+          echo "-------------- shellcmd_start.log --------------------"
+          type c:\shellcmd_start.log
+          echo "-------------- shellcmd_detach.log --------------------"
+          type c:\shellcmd_detach.log
 
       #- name: Submit codecov report
       #  uses: codecov/codecov-action@v3
