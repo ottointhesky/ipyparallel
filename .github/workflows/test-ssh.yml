@@ -182,17 +182,16 @@ jobs:
       - name: Run ${{ matrix.cluster_type }} tests
         if: ${{ matrix.cluster_type && contains(matrix.runs_on, 'windows')}}
         env:
-          SHELLCMD_LOG_PREFIX: c:/
+          SHELLCMD_LOG: ${userdir}/shellcmd.log
         run: |
           pytest -v --maxfail=2 --cov=ipyparallel ipyparallel/tests/test_${{ matrix.cluster_type }}.py
 
       - name: Output shellcmd logs
         if: always()
         run: |
-          echo "-------------- shellcmd_start.log --------------------"
-          type c:\shellcmd_start.log
-          echo "-------------- shellcmd_detach.log --------------------"
-          type c:\shellcmd_detach.log
+          dir $env:USERPROFILE
+          echo "-------------- detach.log --------------------"
+          type $env:USERPROFILE\detach.log
 
       #- name: Submit codecov report
       #  uses: codecov/codecov-action@v3
