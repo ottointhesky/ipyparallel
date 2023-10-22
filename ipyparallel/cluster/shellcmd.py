@@ -20,6 +20,28 @@ import base64
 import enum
 from tempfile import NamedTemporaryFile
 from datetime import datetime
+from random import randint
+
+class DebugLog:
+    def __init__(self):
+        if "SHELLCMD_LOG_PREFIX" in os.environ:
+            self.logfile_start = os.path.join(os.environ["SHELLCMD_LOG_PREFIX"],"shellcmd_start.log")
+            self.logfile_detach = os.path.join(os.environ["SHELLCMD_LOG_PREFIX"],"shellcmd_detach.log")
+        else:
+            self.logfile_start = None
+            self.logfile_detach = None
+
+    def log_start(self, id, msg):
+        if not self.logfile_start:
+            return
+        with open(self.logfile_start, "a") as f:
+            f.write(f"{datetime.now()} [{id}] {msg}\n")
+
+    def log_detach(self, id, msg):
+        if not self.logfile_detach:
+            return
+        with open(self.logfile_detach, "a") as f:
+            f.write(f"{datetime.now()} [{id}] {msg}\n")
 
 class Platform(enum.Enum):
     Unknown = 0,
@@ -54,6 +76,7 @@ class ShellCommandReceive:
 
     def __init__(self, debugging=False, use_break_way=True):
         self.debugging = debugging
+        self.log = DebugLog()
         self.platform = Platform.get()
         self.use_break_way = use_break_way
         pass
@@ -102,9 +125,8 @@ class ShellCommandReceive:
                 if p[0] == '"' and p[-1] == '"':
                     start_cmd[idx] = p.strip('"')
 
-        if self.debugging:
-            with open("start_cmd.txt", "w") as f:
-                f.write(str(start_cmd))
+        ranid = randint(0, 999)
+        self.log.log_start(ranid,f"start_cmd={start_cmd}  (use_break_way={self.use_break_way})")
 
         if self.platform == Platform.Windows:
             from subprocess import Popen
@@ -127,12 +149,16 @@ class ShellCommandReceive:
                 pkwargs['stderr'] = fo
                 pkwargs['stdin'] = DEVNULL
 
+            self.log.log_start(ranid, f"Popen(**pkwargs={pkwargs}")
             p = Popen(start_cmd, **pkwargs)
+            self.log.log_start(ranid, f"pid={p.pid}")
 
             print(f'__remote_pid={p.pid}__')
             sys.stdout.flush()
             if self.use_break_way == False:
+                self.log.log_start(ranid, f"before wait")
                 p.wait()
+                self.log.log_start(ranid, f"after wait")
         else:
             start_cmd = [self._linux_quote(x) for x in start_cmd]
 
@@ -228,6 +254,7 @@ class ShellCommandSend:
     output_template = re.compile(r"__([a-z][a-z0-9_]+)=([a-z0-9\-\.]+)__", re.IGNORECASE)
     receiver_code = inspect.getsource(ShellCommandReceive)
     platform_code = inspect.getsource(Platform)
+    debug_log_code = inspect.getsource(DebugLog)
     _python_chars_map = str.maketrans({"\\": "\\\\", "'": "\\'"})
 
     def __init__(self, shell, args, python_path, initialize=True, send_receiver_class=False):
@@ -245,6 +272,7 @@ class ShellCommandSend:
 
         self.send_receiver_class = send_receiver_class  # should be activated when developing...
         self.debugging = False  # for outputs to file for easier debugging
+        self.log = DebugLog()
 
         if initialize:
             self.initialize()
@@ -332,18 +360,14 @@ class ShellCommandSend:
         else:
             cmd = self.shell + self.args + full_list
 
-        if self.debugging:
-            with open("send_cmd.txt", "w") as f:
-                for idx, c in enumerate(cmd):
-                    f.write(f"{idx}:{c}$\n")
-
         return self._check_output(cmd)
 
     def _cmd_send(self, cmd, *args, **kwargs):
         if not self.send_receiver_class:
             preamble = f"from ipyparallel.cluster.shellcmd import ShellCommandReceive\n"
         else:
-            preamble = f"import sys, os, enum, json\n{self.platform_code}\n{self.receiver_code}\n"
+            preamble = f"import sys, os, enum, json\nfrom datetime import datetime\nfrom random import randint\n"\
+                       f"{self.debug_log_code}\n{self.platform_code}\n{self.receiver_code}\n"
 
         # in send receiver mode it is not required that the ipyparallel.cluster.shellcmd
         # exists (or is update to date) on the 'other' side of the shell. This is particular
@@ -385,12 +409,23 @@ class ShellCommandSend:
 
             # simple python code that starts the actual cmd in a non detachted
             cmd_args_str = ", ".join(f'{self._format_for_python(c)}' for c in cmd_args)
-            py_detached = f"from subprocess import Popen,PIPE;fo=open(r'{fo_name}','w');" \
-                          f"fi=open(r'{fi_name}','r');input=fi.read();del fi;"\
-                          f"p=Popen(["+cmd_args_str+"], stdin=PIPE, stdout=fo, stderr=fo, universal_newlines=True);" \
-                          f"p.stdin.write(input);p.stdin.flush();p.communicate()"
+            if self.log.logfile_detach:
+                tmp = str(cmd_args_str).replace("'", "")
+                py_detached = f"from subprocess import Popen,PIPE;fo=open(r'{fo_name}','w');" \
+                              f"fi=open(r'{fi_name}','r');input=fi.read();del fi;" \
+                              f"from random import randint;from datetime import datetime;ranid=randint(0,999);" \
+                              f"log=open(r'{self.log.logfile_detach}','a');log.write(f'{{datetime.now()}} [{{ranid}}] Popen({tmp})\\n');" \
+                              f"p=Popen([" + cmd_args_str + "], stdin=PIPE, stdout=fo, stderr=fo, universal_newlines=True);" \
+                              f"log.write(f'{{datetime.now()}} [{{ranid}}] after Popen\\n');" \
+                              f"p.stdin.write(input);p.stdin.flush();p.communicate();" \
+                              f"log.write(f'{{datetime.now()}} [{{ranid}}] after communicate\\n');"
+            else:
+                py_detached = f"from subprocess import Popen,PIPE;fo=open(r'{fo_name}','w');" \
+                              f"fi=open(r'{fi_name}','r');input=fi.read();del fi;"\
+                              f"p=Popen(["+cmd_args_str+"], stdin=PIPE, stdout=fo, stderr=fo, universal_newlines=True);" \
+                              f"p.stdin.write(input);p.stdin.flush();p.communicate()"
             # now start proxy process detached
-            print(datetime.now(), " [py_detached] ", py_detached)
+            #print(datetime.now(), " [py_detached] ", py_detached)
             p = Popen([sys.executable, '-c', py_detached], close_fds=True, creationflags=DETACHED_PROCESS)
 
             # retrieve (remote) pid from output file
@@ -643,5 +678,5 @@ class ShellCommandSend:
 #sender.break_away_support = False
 #sender = ShellCommandSend(["/usr/bin/bash"], ["-c"], sys.executable, send_receiver_class=1)
 #pid = sender.cmd_start_python_code( "print('hallo johannes')", output_file="output.txt" )
-#pid = sender.cmd_start( ['ping', '-n', '30', '127.0.0.1'], output_file="output.txt" )
+#pid = sender.cmd_start( ['ping', '-n', '5', '127.0.0.1'], output_file="output.txt" )
 #print(f"pid={pid}")
