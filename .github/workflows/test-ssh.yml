@@ -187,7 +187,7 @@ jobs:
           pytest -v --maxfail=2 --cov=ipyparallel ipyparallel/tests/test_${{ matrix.cluster_type }}.py
 
       - name: Output shellcmd logs
-        if: always() && ${{ matrix.cluster_type == 'ssh' && contains(matrix.runs_on, 'windows') }}
+        if: always()
         run: |
           echo "-------------- shellcmd_start.log --------------------"
           type c:\shellcmd_start.log
