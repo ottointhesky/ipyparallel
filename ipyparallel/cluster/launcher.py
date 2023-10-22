@@ -1269,6 +1269,10 @@ class SSHLauncher(LocalProcessLauncher):
         shell_info = self.ssh_sender.get_shell_info()
         python_ok = self.ssh_sender.has_python()
         ipython_installed = self.ssh_sender.has_ipython_package()
+        if self.log:
+            self.log.info(f"shellcmd log file start:  `{self.ssh_sender.log.logfile_start}`")
+            self.log.info(f"shellcmd log file detach: `{self.ssh_sender.log.logfile_detach}`")
+
 
         # create remote profile dir
         self.ssh_sender.check_output_python_module(["IPython", "profile", "create", "--profile-dir", self.remote_profile_dir])
