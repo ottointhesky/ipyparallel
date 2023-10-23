@@ -91,6 +91,9 @@ class ShellCommandReceive:
         elif "SHELLCMD_LOG" in os.environ:
             self.log = SimpleLog(os.environ["SHELLCMD_LOG"])
 
+        if self.log:
+            self.log.info("ShellCommandReceive instance created")
+
     def _linux_quote(self, p):
         if "'" in p:
             return '"' + p + '"'
@@ -452,6 +455,7 @@ class ShellCommandSend:
             #print(datetime.now(), " [py_detached] ", py_detached)
             if self.log:
                 self.log.info("[ShellCommandSend._cmd_send] starting detached process...")
+                self.log.debug("[ShellCommandSend._cmd_send] python command: \n"+py_cmd)
             try:
                 p = Popen([sys.executable, '-c', py_detached], close_fds=True, creationflags=DETACHED_PROCESS)
             except Exception as e:
