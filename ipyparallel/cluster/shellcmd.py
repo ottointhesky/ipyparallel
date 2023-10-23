@@ -78,12 +78,17 @@ class ShellCommandReceive:
     is written to stdout in the following form: __<key>=<value>__
     """
 
-    def __init__(self, debugging=False, use_break_way=True):
+    def __init__(self, debugging=False, use_break_way=True, log=None):
         self.debugging = debugging
         self.log = None
         self.platform = Platform.get()
         self.use_break_way = use_break_way
-        if "SHELLCMD_LOG" in os.environ:
+        if log:
+            if isinstance(log,str):
+                self.log = SimpleLog(log)
+            else:
+                self.log = log
+        elif "SHELLCMD_LOG" in os.environ:
             self.log = SimpleLog(os.environ["SHELLCMD_LOG"])
 
     def _linux_quote(self, p):
@@ -282,6 +287,7 @@ class ShellCommandSend:
 
         self.send_receiver_class = send_receiver_class  # should be activated when developing...
         self.debugging = False  # for outputs to file for easier debugging
+        self.log = None
         if log:
             if isinstance(log,str):
                 self.log = SimpleLog(log)
@@ -388,15 +394,17 @@ class ShellCommandSend:
         # exists (or is update to date) on the 'other' side of the shell. This is particular
         # useful when doing further development without copying the adapted file before each
         # test run. Furthermore, the calls are much faster.
+        receiver_params=[]
         param_str = ""
-        if self.debugging:
-            param_str = "debugging=True"
-        if self.break_away_support == False:
-            if len(param_str) > 0:
-                param_str += ", "
-            param_str = "use_break_way=False"
 
-        py_cmd = f"{preamble}\nShellCommandReceive({param_str}).cmd_{cmd}("
+        if self.debugging:
+            receiver_params.append("debugging=True")
+        if self.break_away_support == False:
+            receiver_params.append("use_break_way=False")
+        if self.log:
+            receiver_params.append("log='${userdir}/shellcmd.log'")
+
+        py_cmd = f"{preamble}\nShellCommandReceive({', '.join(receiver_params)}).cmd_{cmd}("
         assert len(args) == 1
         for a in args:
             py_cmd += self._format_for_python(a)
