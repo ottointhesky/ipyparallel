@@ -450,7 +450,16 @@ class ShellCommandSend:
                               f"p.stdin.write(input);p.stdin.flush();p.communicate()"
             # now start proxy process detached
             #print(datetime.now(), " [py_detached] ", py_detached)
-            p = Popen([sys.executable, '-c', py_detached], close_fds=True, creationflags=DETACHED_PROCESS)
+            if self.log:
+                self.log.info("[ShellCommandSend._cmd_send] starting detached process...")
+            try:
+                p = Popen([sys.executable, '-c', py_detached], close_fds=True, creationflags=DETACHED_PROCESS)
+            except Exception as e:
+                if self.log:
+                    self.log.error(f"[ShellCommandSend._cmd_send] detached process failed: {str(e)}")
+                raise e
+            if self.log:
+                self.log.info("[ShellCommandSend._cmd_send] detached process started successful. Waiting for redirected output (pid)...")
 
             # retrieve (remote) pid from output file
             output = ""
@@ -466,6 +475,13 @@ class ShellCommandSend:
                             raise Exception("internal error: no pid returned, although exit code of process was 0")
 
                 time.sleep(0.1)  # wait a 0.1s and repeat
+
+            if self.log:
+                if len(output) == 0:
+                    self.log.error("[ShellCommandSend._cmd_send] not output received!")
+                else:
+                    self.log.info("[ShellCommandSend._cmd_send] output received: "+output)
+
             return output
         else:
             return self._check_output(cmd_args, universal_newlines=True, input=py_cmd)
