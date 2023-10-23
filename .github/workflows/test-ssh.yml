@@ -189,9 +189,11 @@ jobs:
       - name: Output shellcmd logs
         if: always()
         run: |
-          dir $env:USERPROFILE
+          #dir $env:USERPROFILE
           echo "-------------- detach.log --------------------"
           type $env:USERPROFILE\detach.log
+          echo "-------------- docker shellcmd.log --------------------"
+          docker run ipyparallel-sshd powershell.exe -Command "type C:\Users\ciuser\shellcmd.log"
 
       #- name: Submit codecov report
       #  uses: codecov/codecov-action@v3
