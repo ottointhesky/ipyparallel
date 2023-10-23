@@ -91,7 +91,7 @@ def test_shellcmds(platform, sender, shellcmd_test_cmd, ssh_running):
             warnings.warn("Break away process creation flag is not available (known issue for Github Runners)",
                           UserWarning)
 
-    sender.break_away_support = False  # just for testing
+    #sender.break_away_support = False  # just for testing
 
     info = sender.get_shell_info()
     assert len(info) == 2 and info[0] and info[1]
