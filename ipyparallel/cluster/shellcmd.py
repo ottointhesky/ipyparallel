@@ -86,6 +86,7 @@ class ShellCommandReceive:
         if log:
             if isinstance(log,str):
                 self.log = SimpleLog(log)
+                print(f'__log_file={self.log.filename}__')
             else:
                 self.log = log
         elif "SHELLCMD_LOG" in os.environ:
@@ -559,7 +560,7 @@ class ShellCommandSend:
                 shell = val
 
         if self.platform == Platform.Windows and self.python_path is not None:
-            self.break_away_support = self._check_for_break_away_flag()
+            self.break_away_support = False #self._check_for_break_away_flag() #temporary disable break away check
 
         self.shell_info = (system, shell)
 
