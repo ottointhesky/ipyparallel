@@ -1165,7 +1165,7 @@ class SSHLauncher(LocalProcessLauncher):
             return self.ssh_sender
 
         self.log.info(f'Create ShellCommandSend object ({self.ssh_cmd}, {self.ssh_args + [self.location]}, {self.remote_python} )')
-        self.ssh_sender = ShellCommandSend(self.ssh_cmd, self.ssh_args + [self.location], self.remote_python)
+        self.ssh_sender = ShellCommandSend(self.ssh_cmd, self.ssh_args + [self.location], self.remote_python, log=self.log)
         return self.ssh_sender
 
     def _reconstruct_process(self, d):
@@ -1269,6 +1269,9 @@ class SSHLauncher(LocalProcessLauncher):
         shell_info = self.ssh_sender.get_shell_info()
         python_ok = self.ssh_sender.has_python()
         ipython_installed = self.ssh_sender.has_ipython_package()
+        if self.log:
+            self.log.info(f"ssh sender object initiated (break_away_support={self.ssh_sender.break_away_support})")
+
 
         # create remote profile dir
         self.ssh_sender.check_output_python_module(["IPython", "profile", "create", "--profile-dir", self.remote_profile_dir])
