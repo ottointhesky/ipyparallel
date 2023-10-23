@@ -194,7 +194,7 @@ jobs:
           type $env:USERPROFILE\detach.log
           echo "-------------- docker shellcmd.log --------------------"
           scp -P 2222 ciuser@127.0.0.1:C:\Users\ciuser\shellcmd.log .
-          type shellcmd.log"
+          type shellcmd.log
 
       #- name: Submit codecov report
       #  uses: codecov/codecov-action@v3
