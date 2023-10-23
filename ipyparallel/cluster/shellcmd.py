@@ -86,7 +86,13 @@ class ShellCommandReceive:
         if log:
             if isinstance(log,str):
                 self.log = SimpleLog(log)
+                # just some test code to make sure that log messages are written to file
+                self.log.info("test log message")
                 print(f'__log_file={self.log.filename}__')
+                content = ""
+                with open(self.log.filename,"r") as f:
+                    content = f.read()
+                print(f'__log_content={content}__')
             else:
                 self.log = log
         elif "SHELLCMD_LOG" in os.environ:
