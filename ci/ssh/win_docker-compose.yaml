@@ -2,6 +2,7 @@ services:
   sshd:
     image: ipyparallel-sshd
     tty: true
+    isolation: 'hyperv'
     build:
       context: ../..
       dockerfile: ci/ssh/win_Dockerfile
