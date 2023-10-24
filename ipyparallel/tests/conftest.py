@@ -240,7 +240,10 @@ def copy_shellcmd_docker_log(request):
         print("Copy shellcmd log from docker container...")
         target_dir = os.environ["USERPROFILE"]
         logfile = "shellcmd.log"
-        check_call(["scp", "-P", "2222", "ciuser@127.0.0.1:C:\\Users\\ciuser\\"+logfile, target_dir])
+        try:
+            check_call(["scp", "-P", "2222", "ciuser@127.0.0.1:C:\\Users\\ciuser\\"+logfile, target_dir])
+        except Exception as e:
+            pass
         target = os.path.join(target_dir,logfile)
         if os.path.exists(target):
             print("copying successful")
