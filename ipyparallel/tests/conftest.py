@@ -233,3 +233,19 @@ def ssh_dir(request):
 #     with key_file.open('r') as f:
 #         assert 'PRIVATE KEY' in f.readline()
 #     return str(key_file)
+
+@pytest.fixture(scope="session")
+def copy_shellcmd_docker_log(request):
+    def final():
+        print("Copy shellcmd log from docker container...")
+        target_dir = os.environ["USERPROFILE"]
+        logfile = "shellcmd.log"
+        check_call(["scp", "-P", "2222", "ciuser@127.0.0.1:C:\\Users\\ciuser\\"+logfile, target_dir])
+        target = os.path.join(target_dir,logfile)
+        if os.path.exists(target):
+            print("copying successful")
+        else:
+            print("copying FAILED")
+
+    if os.name == "nt":
+        request.addfinalizer(final)
