@@ -173,15 +173,31 @@ async def test_restart_engines(Cluster):
 
 async def test_get_output(Cluster):
     n = 2
+    controller_out = None
+    id = None
     async with Cluster(n=n) as rc:
         cluster = rc.cluster
         engine_set_id = next(iter(cluster.engines))
         engine_set = cluster.engines[engine_set_id]
+        controller_out = cluster.controller.get_output()
+        id = cluster.cluster_id
     out = engine_set.get_output()
     print(f"---engine output---\n{out}\n---end engine output---")
     assert out
     assert 'Completed registration with id 0' in out
     assert 'Completed registration with id 1' in out
+
+    if os.name == "nt":
+        userdir = os.environ["USERPROFILE"]
+    else:
+        userdir = os.environ["HOME"] if "HOME" in os.environ else ""
+    logpath = os.path.join(userdir, "test_get_output.log")
+    mode = "a" if os.path.exists(logpath) else "w"
+    with open(logpath, mode) as f:
+        f.write(f"\n\n\n---controller output {id}-----------------------------\n")
+        f.write(controller_out)
+        f.write("\n---engine output---------------------------------\n")
+        f.write(out)
 
 
 async def test_async_with(Cluster):

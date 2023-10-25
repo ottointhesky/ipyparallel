@@ -5,7 +5,7 @@ import os
 import sys
 from contextlib import contextmanager
 from pathlib import Path
-from subprocess import check_call, check_output, call
+from subprocess import call, check_call, check_output
 from tempfile import NamedTemporaryFile, TemporaryDirectory
 from unittest import mock
 
@@ -164,6 +164,7 @@ def Cluster(
 
     yield ClusterConstructor
 
+
 @pytest.fixture(scope="session")
 def ssh_running():
     # check if an ssh docker container is running
@@ -172,11 +173,10 @@ def ssh_running():
     except Exception:
         return False
     if len(out) > 0:
-        id = out    #container id
+        id = out  # container id
         return True
 
     return False
-
 
 
 @pytest.fixture(scope="session")
@@ -234,6 +234,7 @@ def ssh_dir(request):
 #         assert 'PRIVATE KEY' in f.readline()
 #     return str(key_file)
 
+
 @pytest.fixture(scope="session")
 def copy_shellcmd_docker_log(request):
     def final_windows():
@@ -241,10 +242,18 @@ def copy_shellcmd_docker_log(request):
         target_dir = os.environ["USERPROFILE"]
         logfile = "shellcmd.log"
         try:
-            check_call(["scp", "-P", "2222", r"ciuser@127.0.0.1:C:\\Users\\ciuser\\"+logfile, target_dir])
+            check_call(
+                [
+                    "scp",
+                    "-P",
+                    "2222",
+                    r"ciuser@127.0.0.1:C:\\Users\\ciuser\\" + logfile,
+                    target_dir,
+                ]
+            )
         except Exception as e:
             pass
-        target = os.path.join(target_dir,logfile)
+        target = os.path.join(target_dir, logfile)
         if os.path.exists(target):
             print("copying successful")
         else:
@@ -252,11 +261,33 @@ def copy_shellcmd_docker_log(request):
 
         try:
             print("--- List log directory -----------------------------")
-            call(["ssh", "-p", "2222", "ciuser@127.0.0.1", "dir", "C:\\Users\\ciuser\\.ipython\\profile_default\\log\\*.debug_backup"],stdout=sys.stdout,stderr=sys.stderr)
+            call(
+                [
+                    "ssh",
+                    "-p",
+                    "2222",
+                    "ciuser@127.0.0.1",
+                    "dir",
+                    "C:\\Users\\ciuser\\.ipython\\profile_default\\log\\*.debug_backup",
+                ],
+                stdout=sys.stdout,
+                stderr=sys.stderr,
+            )
             print("--- Copy all log files -----------------------------")
-            call(["scp", "-P", "2222", "ciuser@127.0.0.1:C:/Users/ciuser/.ipython/profile_default/log/*.debug_backup", target_dir],stdout=sys.stdout,stderr=sys.stderr)
+            call(
+                [
+                    "scp",
+                    "-P",
+                    "2222",
+                    "ciuser@127.0.0.1:C:/Users/ciuser/.ipython/profile_default/log/*.debug_backup",
+                    target_dir,
+                ],
+                stdout=sys.stdout,
+                stderr=sys.stderr,
+            )
         except Exception as e:
             pass
 
-    if os.name == "nt":
-        request.addfinalizer(final_windows)
+    pass  # only activate code for debugging reasons
+    # if os.name == "nt":
+    #    request.addfinalizer(final_windows)
