@@ -252,9 +252,9 @@ def copy_shellcmd_docker_log(request):
 
         try:
             print("--- List log directory -----------------------------")
-            call(["ssh", "-p", "2222", "ciuser@127.0.0.1", "dir", "C:\\Users\\ciuser\\.ipython\\profile_default\\log\\*.out"],stdout=sys.stdout,stderr=sys.stderr)
+            call(["ssh", "-p", "2222", "ciuser@127.0.0.1", "dir", "C:\\Users\\ciuser\\.ipython\\profile_default\\log\\*.debug_backup"],stdout=sys.stdout,stderr=sys.stderr)
             print("--- Copy all log files -----------------------------")
-            call(["scp", "-P", "2222", "ciuser@127.0.0.1:C:/Users/ciuser/.ipython/profile_default/log/*.out", target_dir],stdout=sys.stdout,stderr=sys.stderr)
+            call(["scp", "-P", "2222", "ciuser@127.0.0.1:C:/Users/ciuser/.ipython/profile_default/log/*.debug_backup", target_dir],stdout=sys.stdout,stderr=sys.stderr)
         except Exception as e:
             pass
 
