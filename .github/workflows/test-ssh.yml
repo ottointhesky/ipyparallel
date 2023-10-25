@@ -65,6 +65,11 @@ jobs:
                   f.write(f"{key}={value}\n")
           EOF
 
+      - name: Docker infos
+        run: |    
+          docker version
+          docker images
+
       - name: Set up docker-compose for ssh linux launcher
         if: ${{ matrix.cluster_type == 'ssh' && !contains(matrix.runs_on, 'windows') }}
         run: |
