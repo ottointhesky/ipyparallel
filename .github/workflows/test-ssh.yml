@@ -207,7 +207,7 @@ jobs:
         if: (success() || failure()) && !contains(matrix.runs_on, 'windows')
         run: |
           echo "-------------- test_get_output.log --------------------"
-          if test -f "~/test_get_output.log"; then
+          if test -f ~/test_get_output.log; then
               cat ~/test_get_output.log
           fi
 
