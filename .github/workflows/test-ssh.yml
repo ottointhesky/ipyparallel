@@ -195,28 +195,21 @@ jobs:
           pytest -v --maxfail=2 --cov=ipyparallel ipyparallel/tests/test_${{ matrix.cluster_type }}.py
 
       - name: Output windows ssh log
-        if: always()
+        if: (success() || failure()) && contains(matrix.runs_on, 'windows')
         run: |
           echo "-------------- test_get_output.log --------------------"
-          type $env:USERPROFILE\test_get_output.log
+          if (Test-Path -Path $env:USERPROFILE\test_get_output.log) {
+            type $env:USERPROFILE\test_get_output.log
+          }
 
-          #dir $env:USERPROFILE
-          #echo "-------------- detach.log --------------------"
-          #type $env:USERPROFILE\detach.log
-          #echo "-------------- docker shellcmd.log --------------------"
-          #type $env:USERPROFILE\shellcmd.log
-          # echo "-------------- engine logs --------------------"
-          # $files = Get-ChildItem $env:USERPROFILE\*.debug_backup
-          # foreach($f in $files) {
-          # echo "-- Content of file '$f' ----------------------------"
-          # Get-Content -Path $f
-          # }
 
       - name: Output linux ssh log
-        if: always()
+        if: (success() || failure()) && !contains(matrix.runs_on, 'windows')
         run: |
           echo "-------------- test_get_output.log --------------------"
-          cat ~/test_get_output.log
+          if test -f "~/test_get_output.log"; then
+              cat ~/test_get_output.log
+          fi
 
       #- name: Submit codecov report
       #  uses: codecov/codecov-action@v3
