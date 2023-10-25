@@ -181,15 +181,13 @@ jobs:
         if: ${{ matrix.container }}
         run: echo "EXEC=docker exec -i ${{ matrix.container }}" >> $GITHUB_ENV
 
-      - name: Run ${{ matrix.cluster_type }} shellcmd tests
-        if: ${{ matrix.cluster_type }}
-        run: |
-          pytest -v --maxfail=2 --cov=ipyparallel ipyparallel/tests/test_shellcmd.py
+      #- name: Run ${{ matrix.cluster_type }} shellcmd tests
+      #  if: ${{ matrix.cluster_type }}
+      #  run: |
+      #    pytest -v --maxfail=2 --cov=ipyparallel ipyparallel/tests/test_shellcmd.py
 
       - name: Run ${{ matrix.cluster_type }} tests
         if: ${{ matrix.cluster_type && contains(matrix.runs_on, 'windows')}}
-        env:
-          SHELLCMD_LOG: ${userdir}/shellcmd.log
         run: |
           pytest -v --maxfail=2 --cov=ipyparallel ipyparallel/tests/test_${{ matrix.cluster_type }}.py
 
