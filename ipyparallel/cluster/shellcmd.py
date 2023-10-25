@@ -86,13 +86,13 @@ class ShellCommandReceive:
         if log:
             if isinstance(log,str):
                 self.log = SimpleLog(log)
-                # just some test code to make sure that log messages are written to file
-                self.log.info("test log message")
-                print(f'__log_file={self.log.filename}__')
-                content = ""
-                with open(self.log.filename,"r") as f:
-                    content = f.read()
-                print(f'__log_content={content}__')
+                # # just some test code to make sure that log messages are written to file
+                # self.log.info("test log message")
+                # print(f'__log_file={self.log.filename}__')
+                # content = ""
+                # with open(self.log.filename,"r") as f:
+                #     content = f.read()
+                # print(f'__log_content={content}__')
             else:
                 self.log = log
         elif "SHELLCMD_LOG" in os.environ:
@@ -100,6 +100,10 @@ class ShellCommandReceive:
 
         if self.log:
             self.log.info("ShellCommandReceive instance created")
+
+    def __del__(self):
+        if self.log:
+            self.log.info("ShellCommandReceive instance deleted")
 
     def _linux_quote(self, p):
         if "'" in p:
@@ -194,6 +198,9 @@ class ShellCommandReceive:
             os.system(nohup_start)
 
     def cmd_running(self, pid):
+        if self.log:
+            self.log.info(f"Check if pid {pid} is running")
+
         if self.platform == Platform.Windows:
             # taken from https://stackoverflow.com/questions/568271/how-to-check-if-there-exists-a-process-with-a-given-pid-in-python
             import ctypes
@@ -217,6 +224,9 @@ class ShellCommandReceive:
             os.system(ps_cmd)
 
     def cmd_kill(self, pid, sig=None):
+        if self.log:
+            self.log.info(f"Kill pid {pid} (signal={sig})")
+
         if self.platform == Platform.Windows:
             # os.kill doesn't work reliable under windows. also see
             # https://stackoverflow.com/questions/28551180/how-to-kill-subprocess-python-in-windows
@@ -239,20 +249,31 @@ class ShellCommandReceive:
             os.kill(pid, sig)
 
     def cmd_mkdir(self, path):
+        if self.log:
+            self.log.info(f"Make directory '{path}'")
+
         os.makedirs(path, exist_ok=True)  # we allow that the directory already exists
 
     def cmd_rmdir(self, path):
+        if self.log:
+            self.log.info(f"Remove directory '{path}'")
         import shutil
         shutil.rmtree(path)
 
     def cmd_exists(self, path):
+        if self.log:
+            self.log.info(f"Check if path exists '{path}'")
+
         if os.path.exists(path):
             print("__exists=1__")
         else:
             print("__exists=0__")
 
     def cmd_remove(self, path):
-        os.remove(path)
+        if self.log:
+            self.log.info(f"Remove file '{path}' (disabled for testing)")
+
+        #os.remove(path)
 
 
 class ShellCommandSend:

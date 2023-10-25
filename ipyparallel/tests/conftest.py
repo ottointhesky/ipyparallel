@@ -5,7 +5,7 @@ import os
 import sys
 from contextlib import contextmanager
 from pathlib import Path
-from subprocess import check_call, check_output
+from subprocess import check_call, check_output, call
 from tempfile import NamedTemporaryFile, TemporaryDirectory
 from unittest import mock
 
@@ -236,7 +236,7 @@ def ssh_dir(request):
 
 @pytest.fixture(scope="session")
 def copy_shellcmd_docker_log(request):
-    def final():
+    def final_windows():
         print("Copy shellcmd log from docker container...")
         target_dir = os.environ["USERPROFILE"]
         logfile = "shellcmd.log"
@@ -250,5 +250,13 @@ def copy_shellcmd_docker_log(request):
         else:
             print("copying FAILED")
 
+        try:
+            print("--- List log directory -----------------------------")
+            call(["ssh", "-p", "2222", "ciuser@127.0.0.1", "dir", "C:\\Users\\ciuser\\.ipython\\profile_default\\log\\*.out"],stdout=sys.stdout,stderr=sys.stderr)
+            print("--- Copy all log files -----------------------------")
+            call(["scp", "-P", "2222", "ciuser@127.0.0.1:C:\\Users\\ciuser\\.ipython\\profile_default\\log\\*.out", target_dir],stdout=sys.stdout,stderr=sys.stderr)
+        except Exception as e:
+            pass
+
     if os.name == "nt":
-        request.addfinalizer(final)
+        request.addfinalizer(final_windows)
