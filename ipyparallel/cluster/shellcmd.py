@@ -77,6 +77,10 @@ class ShellCommandReceive:
     successfull. Some command require information to be returned (cmd_exists, cmd_start, cmd_running) which
     is written to stdout in the following form: __<key>=<value>__
     """
+    def _log(self, msg):
+        if not self.log:
+            return
+        self.log.info(f"[id={self.ranid}] {msg}")
 
     def __init__(self, debugging=False, use_break_way=True, log=None):
         self.debugging = debugging
@@ -98,23 +102,20 @@ class ShellCommandReceive:
         elif "SHELLCMD_LOG" in os.environ:
             self.log = SimpleLog(os.environ["SHELLCMD_LOG"])
 
+        self.ranid = None
         if self.log:
-            self.log.info("ShellCommandReceive instance created")
+            self.ranid = randint(0, 999)
+            self._log("ShellCommandReceive instance created")
 
     def __del__(self):
         if self.log:
-            self.log.info("ShellCommandReceive instance deleted")
+            self._log("ShellCommandReceive instance deleted")
 
     def _linux_quote(self, p):
         if "'" in p:
             return '"' + p + '"'
         else:
             return p
-
-    def _log_start(self, ranid, msg):
-        if not self.log:
-            return
-        self.log.info(f"[id={ranid}] {msg}")
 
     def cmd_start(self, start_cmd, env=None, output_file=None):
         if env:
@@ -154,8 +155,7 @@ class ShellCommandReceive:
                 if p[0] == '"' and p[-1] == '"':
                     start_cmd[idx] = p.strip('"')
 
-        ranid = randint(0, 999)
-        self._log_start(ranid,f"start_cmd={start_cmd}  (use_break_way={self.use_break_way})")
+        self._log(f"start_cmd={start_cmd}  (use_break_way={self.use_break_way})")
 
         if self.platform == Platform.Windows:
             from subprocess import Popen
@@ -178,16 +178,16 @@ class ShellCommandReceive:
                 pkwargs['stderr'] = fo
                 pkwargs['stdin'] = DEVNULL
 
-            self._log_start(ranid, f"Popen(**pkwargs={pkwargs}")
+            self._log(f"Popen(**pkwargs={pkwargs}")
             p = Popen(start_cmd, **pkwargs)
-            self._log_start(ranid, f"pid={p.pid}")
+            self._log(f"pid={p.pid}")
 
             print(f'__remote_pid={p.pid}__')
             sys.stdout.flush()
             if self.use_break_way == False:
-                self._log_start(ranid, f"before wait")
+                self._log("before wait")
                 p.wait()
-                self._log_start(ranid, f"after wait")
+                self._log("after wait")
         else:
             start_cmd = [self._linux_quote(x) for x in start_cmd]
 
@@ -198,8 +198,7 @@ class ShellCommandReceive:
             os.system(nohup_start)
 
     def cmd_running(self, pid):
-        if self.log:
-            self.log.info(f"Check if pid {pid} is running")
+        self._log(f"Check if pid {pid} is running")
 
         if self.platform == Platform.Windows:
             # taken from https://stackoverflow.com/questions/568271/how-to-check-if-there-exists-a-process-with-a-given-pid-in-python
@@ -224,8 +223,7 @@ class ShellCommandReceive:
             os.system(ps_cmd)
 
     def cmd_kill(self, pid, sig=None):
-        if self.log:
-            self.log.info(f"Kill pid {pid} (signal={sig})")
+        self._log(f"Kill pid {pid} (signal={sig})")
 
         if self.platform == Platform.Windows:
             # os.kill doesn't work reliable under windows. also see
@@ -249,20 +247,18 @@ class ShellCommandReceive:
             os.kill(pid, sig)
 
     def cmd_mkdir(self, path):
-        if self.log:
-            self.log.info(f"Make directory '{path}'")
+        self._log(f"Make directory '{path}'")
 
         os.makedirs(path, exist_ok=True)  # we allow that the directory already exists
 
     def cmd_rmdir(self, path):
-        if self.log:
-            self.log.info(f"Remove directory '{path}'")
+        self._log(f"Remove directory '{path}'")
+
         import shutil
         shutil.rmtree(path)
 
     def cmd_exists(self, path):
-        if self.log:
-            self.log.info(f"Check if path exists '{path}'")
+        self._log(f"Check if path exists '{path}'")
 
         if os.path.exists(path):
             print("__exists=1__")
@@ -270,10 +266,13 @@ class ShellCommandReceive:
             print("__exists=0__")
 
     def cmd_remove(self, path):
-        if self.log:
-            self.log.info(f"Remove file '{path}' (disabled for testing)")
+        self._log(f"Remove file '{path}'")
 
-        #os.remove(path)
+        #if self.debugging == True: # make file backup to retrieve it later
+        import shutil
+        shutil.copyfile(path, path+".debug_backup")
+
+        os.remove(path)
 
 
 class ShellCommandSend:
