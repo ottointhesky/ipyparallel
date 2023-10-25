@@ -216,7 +216,7 @@ jobs:
         if: always()
         run: |
           echo "-------------- test_get_output.log --------------------"
-          cat ~\test_get_output.log
+          cat ~/test_get_output.log
 
       #- name: Submit codecov report
       #  uses: codecov/codecov-action@v3
