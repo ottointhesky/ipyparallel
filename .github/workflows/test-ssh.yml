@@ -73,9 +73,6 @@ jobs:
       - name: Set up docker-compose for ssh linux launcher
         if: ${{ matrix.cluster_type == 'ssh' && !contains(matrix.runs_on, 'windows') }}
         run: |
-          # just to see the ip-address of runner vm
-          ifconfig
-
           export DOCKER_BUILDKIT=1
           export COMPOSE_DOCKER_CLI_BUILD=1
           cd ci/ssh
@@ -89,6 +86,9 @@ jobs:
           #check ssh connection and accept host key
           ssh -o "StrictHostKeyChecking no" ciuser@127.0.0.1 -p 2222 -v ls /
 
+          # just to see the ip-address of runner vm
+          ifconfig
+
       - name: Set up docker-compose for ssh windows launcher
         if: ${{ matrix.cluster_type == 'ssh' && contains(matrix.runs_on, 'windows') }}
         env:
@@ -96,9 +96,6 @@ jobs:
           SSH_PORT: 2222
           CODE_ROOT: c:\src\ipyparallel
         run: |
-          # just to see the ip-address of runner vm
-          ipconfig
-
           cd ci/ssh
           docker-compose -f win_docker-compose.yaml up -d --build
 
@@ -130,12 +127,8 @@ jobs:
           #ssh $env:SSH_HOST -p $env:SSH_PORT "cd $env:CODE_ROOT && pip install -e ."
           ssh $env:SSH_HOST -p $env:SSH_PORT "pip install -e file://c:/src/ipyparallel#egg=ipyparallel[test]"
 
-          #test how fast the ssh connrection is
-          Get-Date -Format G
-          ssh $env:SSH_HOST -p $env:SSH_PORT 'echo "OS-WIN-CMD=%OS%;OS-WIN-PW=$env:OS;OS-LINUX=$OSTYPE;SHELL=$SHELL"'
-          Get-Date -Format G
-          python -c "from subprocess import check_output;print(check_output(['ssh','-p','2222','ciuser@127.0.0.1','echo \'OS-WIN-CMD=%OS%;OS-WIN-PW=$env:OS;OS-LINUX=$OSTYPE;SHELL=$SHELL\'']))"
-          Get-Date -Format G
+          # just to see the ip-address of runner vm
+          ipconfig
 
       - name: Set up slurm
         if: ${{ matrix.cluster_type == 'slurm' }}
@@ -184,27 +177,26 @@ jobs:
         if: ${{ matrix.container }}
         run: echo "EXEC=docker exec -i ${{ matrix.container }}" >> $GITHUB_ENV
 
-      #- name: Run ${{ matrix.cluster_type }} shellcmd tests
-      #  if: ${{ matrix.cluster_type }}
-      #  run: |
-      #    pytest -v --maxfail=2 --cov=ipyparallel ipyparallel/tests/test_shellcmd.py
+      - name: Run ${{ matrix.cluster_type }} shellcmd tests
+        if: ${{ matrix.cluster_type }}
+        run: |
+          pytest -v --maxfail=2 --cov=ipyparallel ipyparallel/tests/test_shellcmd.py
 
       - name: Run ${{ matrix.cluster_type }} tests
         if: ${{ matrix.cluster_type }}
         run: |
           pytest -v --maxfail=2 --cov=ipyparallel ipyparallel/tests/test_${{ matrix.cluster_type }}.py
 
-      - name: Output windows ssh log
-        if: (success() || failure()) && contains(matrix.runs_on, 'windows')
+      - name: Output windows test_ssh.py::test_get_output log (on success)
+        if: success() && contains(matrix.runs_on, 'windows')
         run: |
           echo "-------------- test_get_output.log --------------------"
           if (Test-Path -Path $env:USERPROFILE\test_get_output.log) {
             type $env:USERPROFILE\test_get_output.log
           }
 
-
-      - name: Output linux ssh log
-        if: (success() || failure()) && !contains(matrix.runs_on, 'windows')
+      - name: Output linux test_ssh.py::test_get_output log (on success)
+        if: success() && !contains(matrix.runs_on, 'windows')
         run: |
           echo "-------------- test_get_output.log --------------------"
           if test -f ~/test_get_output.log; then
