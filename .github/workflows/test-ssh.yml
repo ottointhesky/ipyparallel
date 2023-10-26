@@ -129,6 +129,8 @@ jobs:
 
           # just to see the ip-address of runner vm
           ipconfig
+          echo "hostname:"
+          hostname
 
       - name: Set up slurm
         if: ${{ matrix.cluster_type == 'slurm' }}
