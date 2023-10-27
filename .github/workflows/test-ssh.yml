@@ -133,10 +133,14 @@ jobs:
           hostname
           echo "nslookup $env:computername"
           nslookup $env:computername
+          echo "print hosts file:"
+          type c:\Windows\System32\Drivers\etc\hosts
           echo "hostname - python code:"
           python -c "import socket;print('hostname:',socket.gethostname());print('gethostbyname_ex:',socket.gethostbyname_ex(socket.gethostname()))"
-          echo "hostname - docker python code:"
+          echo "in docker container: hostname - python code:"
           docker run ipyparallel-sshd python -c "import socket;print('hostname:','$env:computername');print('gethostbyname_ex:',socket.gethostbyname_ex('$env:computername'))"
+          echo "in docker container: print hosts file:"
+          docker run ipyparallel-sshd cmd.exe /C type c:\Windows\System32\Drivers\etc\hosts
 
       - name: Set up slurm
         if: ${{ matrix.cluster_type == 'slurm' }}
