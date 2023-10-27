@@ -131,6 +131,11 @@ jobs:
           ipconfig
           echo "hostname:"
           hostname
+          echo "computername: $env:computername"
+          echo "hostname - python code:"
+          python -c "import socket;print('hostname:',socket.gethostname());print('gethostbyname_ex:',socket.gethostbyname_ex(socket.gethostname()))"
+          echo "hostname - docker python code:"
+          docker run ipyparallel-sshd python -c "import socket;print('hostname:','$env:computername');print('gethostbyname_ex:',socket.gethostbyname_ex('$env:computername'))"
 
       - name: Set up slurm
         if: ${{ matrix.cluster_type == 'slurm' }}
