@@ -131,7 +131,8 @@ jobs:
           ipconfig
           echo "hostname:"
           hostname
-          echo "computername: $env:computername"
+          echo "nslookup $env:computername"
+          nslookup $env:computername
           echo "hostname - python code:"
           python -c "import socket;print('hostname:',socket.gethostname());print('gethostbyname_ex:',socket.gethostbyname_ex(socket.gethostname()))"
           echo "hostname - docker python code:"
