@@ -8,3 +8,6 @@ services:
       dockerfile: ci/ssh/win_Dockerfile
     ports:
       - "2222:22"
+    extra_hosts:
+      #just for testing
+      jo: 128.131.72.10
