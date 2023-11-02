@@ -4,10 +4,12 @@ SHELL ["powershell"]
 
 ENV PYTHON_VERSION 3.8.10
 ENV PYTHON_RELEASE 3.8.10
-ENV docker_host_ip   ${docker_host_ip}
+#ENV docker_host_ip   ${docker_host_ip}
 ENV docker_host_name ${docker_host_name}
 
 # RUN --mount=type=bind,source=D:/swdvlp64_cmake/external/ipyparallel,target=C:/src/ipyparallel
+
+RUN ipconfig /all
 
 #download and install latest node js version
 RUN $baseurl = 'https://nodejs.org/dist/latest/'; \
@@ -34,6 +36,7 @@ RUN $baseurl = 'https://nodejs.org/dist/latest/'; \
 	Write-Host 'Complete.'; \
 	\
 	$hostsfile='C:\Windows\System32\drivers\etc\hosts'; \
+	$env:docker_host_ip=(Get-NetIPConfiguration -InterfaceAlias "Ethernet*").IPv4DefaultGateway.NextHop.Trim(); \
 	$line=\"$env:docker_host_ip $env:docker_host_name\"; \
 	if ($line.Trim().Length -eq 0) { \
 		Write-Host 'Environment variables docker_host_[name|ip] not set. Hosts file unchanged!'; \
