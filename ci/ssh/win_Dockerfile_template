@@ -4,6 +4,8 @@ SHELL ["powershell"]
 
 ENV PYTHON_VERSION 3.8.10
 ENV PYTHON_RELEASE 3.8.10
+ENV docker_host_ip   ${docker_host_ip}
+ENV docker_host_name ${docker_host_name}
 
 # RUN --mount=type=bind,source=D:/swdvlp64_cmake/external/ipyparallel,target=C:/src/ipyparallel
 
@@ -29,7 +31,20 @@ RUN $baseurl = 'https://nodejs.org/dist/latest/'; \
 	Write-Host 'Removing setup file...'; \
 	Remove-Item node.msi -Force; \
 	\
-	Write-Host 'Complete.'
+	Write-Host 'Complete.'; \
+	\
+	$hostsfile='C:\Windows\System32\drivers\etc\hosts'; \
+	$line=\"$env:docker_host_ip $env:docker_host_name\"; \
+	if ($line.Trim().Length -eq 0) { \
+		Write-Host 'Environment variables docker_host_[name|ip] not set. Hosts file unchanged!'; \
+	} else { \
+		Write-Host 'Adapting hosts file '; \
+		$h=(Get-Content $hostsfile)+$line; \
+		echo $h | out-file -encoding ASCII $hostsfile; \
+		type $hostsfile; \
+	}
+
+
 
 #download and install python
 RUN $url = ('https://www.python.org/ftp/python/{0}/python-{1}-amd64.exe' -f $env:PYTHON_RELEASE, $env:PYTHON_VERSION); \
@@ -92,5 +107,3 @@ USER containeradministrator
 # this was the only way i found, to keep the sshd running 
 # running it the context of a user (even if its the admin doesn't, back of some right issues)
 CMD powershell -NoExit -Command "Start-Service sshd"
-
-
