@@ -97,6 +97,12 @@ jobs:
           CODE_ROOT: c:\src\ipyparallel
         run: |
           cd ci/ssh
+          # determine host ip and place it as 'static' env variables in corresponding docker compose file
+          $env:docker_host_ip=(Get-NetIPConfiguration -InterfaceAlias "Ethernet*").IPv4Address.IPAddress.Trim()
+          $content = Get-Content "win_Dockerfile_template"
+          $content | ForEach-Object { 
+             $_ -replace '\${docker_host_ip}', $env:docker_host_ip -replace '\${docker_host_name}', $env:computername
+          } | Set-Content "win_Dockerfile"
           docker-compose -f win_docker-compose.yaml up -d --build
 
           # retrieve id_rsa file for public key authentication
