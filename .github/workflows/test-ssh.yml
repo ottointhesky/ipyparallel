@@ -145,6 +145,7 @@ jobs:
           docker run ipyparallel-sshd python -c "import socket;print('hostname:','$env:computername');print('gethostbyname_ex:',socket.gethostbyname_ex('$env:computername'))"
           #echo "in docker container: nslookup $env:computername"
           #docker run ipyparallel-sshd nslookup $env:computername
+          docker network ls
           echo "in docker container: ping $env:computername"
           docker run ipyparallel-sshd ping $env:computername
 
