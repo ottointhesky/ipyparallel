@@ -143,10 +143,10 @@ jobs:
           python -c "import socket;print('hostname:',socket.gethostname());print('gethostbyname_ex:',socket.gethostbyname_ex(socket.gethostname()))"
           echo "in docker container: hostname - python code:"
           docker run ipyparallel-sshd python -c "import socket;print('hostname:','$env:computername');print('gethostbyname_ex:',socket.gethostbyname_ex('$env:computername'))"
-          echo "in docker container: nslookup $env:computername"
-          docker run ipyparallel-sshd nslookup $env:computername
-          echo "in docker container: ping jo"
-          docker run ipyparallel-sshd ping jo
+          #echo "in docker container: nslookup $env:computername"
+          #docker run ipyparallel-sshd nslookup $env:computername
+          echo "in docker container: ping $env:computername"
+          docker run ipyparallel-sshd ping $env:computername
 
           #echo "print hosts file:"
           #type c:\Windows\System32\Drivers\etc\hosts
