@@ -134,24 +134,16 @@ jobs:
           ssh $env:SSH_HOST -p $env:SSH_PORT "pip install -e file://c:/src/ipyparallel#egg=ipyparallel[test]"
 
           # just to see the ip-address of runner vm
+          echo "ipconfig host:"
           ipconfig
-          echo "hostname:"
-          hostname
-          echo "nslookup $env:computername"
-          nslookup $env:computername
-          echo "hostname - python code:"
+          echo "gethostbyname_ex host:"
           python -c "import socket;print('hostname:',socket.gethostname());print('gethostbyname_ex:',socket.gethostbyname_ex(socket.gethostname()))"
-          echo "in docker container: hostname - python code:"
-          docker run ipyparallel-sshd python -c "import socket;print('hostname:','$env:computername');print('gethostbyname_ex:',socket.gethostbyname_ex('$env:computername'))"
-          #echo "in docker container: nslookup $env:computername"
-          #docker run ipyparallel-sshd nslookup $env:computername
+          echo "docker network ls:"
           docker network ls
-          echo "in docker container: ping $env:computername"
-          docker run ipyparallel-sshd ping $env:computername
-
-          #echo "print hosts file:"
-          #type c:\Windows\System32\Drivers\etc\hosts
-          #echo "in docker container: print hosts file:"
+          echo "ipconfig container:"
+          docker run ipyparallel-sshd ipconfig
+          echo "gethostbyname_ex container:"
+          docker run ipyparallel-sshd python -c "import socket;print('hostname:','$env:computername');print('gethostbyname_ex:',socket.gethostbyname_ex('$env:computername'))"
           #docker run ipyparallel-sshd cmd.exe /C type c:\Windows\System32\Drivers\etc\hosts
 
       - name: Set up slurm
