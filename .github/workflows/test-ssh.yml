@@ -145,6 +145,13 @@ jobs:
           echo "gethostbyname_ex container:"
           docker run ipyparallel-sshd python -c "import socket;print('hostname:','$env:computername');print('gethostbyname_ex:',socket.gethostbyname_ex('$env:computername'))"
           #docker run ipyparallel-sshd cmd.exe /C type c:\Windows\System32\Drivers\etc\hosts
+          echo "Firewall status:"
+          Get-NetFirewallProfile | Format-Table Name, Enabled
+          echo "Disable Firewall:"
+          Set-NetFirewallProfile -Profile Domain, Public, Private -Enabled False
+          echo "Firewall status:"
+          Get-NetFirewallProfile | Format-Table Name, Enabled
+          docker run ipyparallel-sshd ping $env:computername
 
       - name: Set up slurm
         if: ${{ matrix.cluster_type == 'slurm' }}
