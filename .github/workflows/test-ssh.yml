@@ -96,6 +96,11 @@ jobs:
           SSH_PORT: 2222
           CODE_ROOT: c:\src\ipyparallel
         run: |
+          echo "Firewall status:"
+          Get-NetFirewallProfile | Format-Table Name, Enabled
+          echo "Disable Firewall:"
+          Set-NetFirewallProfile -Profile Domain, Public, Private -Enabled False
+
           cd ci/ssh
           # determine host ip and place it as 'static' env variables in corresponding docker compose file
           $env:docker_host_ip=(Get-NetIPConfiguration -InterfaceAlias "Ethernet*").IPv4Address.IPAddress.Trim()
@@ -145,12 +150,9 @@ jobs:
           echo "gethostbyname_ex container:"
           docker run ipyparallel-sshd python -c "import socket;print('hostname:','$env:computername');print('gethostbyname_ex:',socket.gethostbyname_ex('$env:computername'))"
           #docker run ipyparallel-sshd cmd.exe /C type c:\Windows\System32\Drivers\etc\hosts
-          echo "Firewall status:"
-          Get-NetFirewallProfile | Format-Table Name, Enabled
-          echo "Disable Firewall:"
-          Set-NetFirewallProfile -Profile Domain, Public, Private -Enabled False
-          echo "Firewall status:"
-          Get-NetFirewallProfile | Format-Table Name, Enabled
+
+          #echo "Firewall status:"
+          #Get-NetFirewallProfile | Format-Table Name, Enabled
           docker run ipyparallel-sshd ping $env:computername
 
       - name: Set up slurm

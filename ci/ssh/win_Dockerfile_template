@@ -4,8 +4,8 @@ SHELL ["powershell"]
 
 ENV PYTHON_VERSION 3.8.10
 ENV PYTHON_RELEASE 3.8.10
-ENV docker_host_ip   ${docker_host_ip}
-ENV docker_host_name ${docker_host_name}
+#ENV docker_host_ip   ${docker_host_ip}
+#ENV docker_host_name ${docker_host_name}
 
 # RUN --mount=type=bind,source=D:/swdvlp64_cmake/external/ipyparallel,target=C:/src/ipyparallel
 
