@@ -96,13 +96,8 @@ jobs:
           SSH_PORT: 2222
           CODE_ROOT: c:\src\ipyparallel
         run: |
-          echo "Firewall status:"
-          Get-NetFirewallProfile | Format-Table Name, Enabled
-          echo "Disable Firewall:"
-          Set-NetFirewallProfile -Profile Domain, Public, Private -Enabled False
-
           cd ci/ssh
-          # determine host ip and place it as 'static' env variables in corresponding docker compose file
+          # determine host ip and place it as 'static' env variables in corresponding docker compose file (win_Dockerfile_template -> win_Dockerfile)
           $env:docker_host_ip=(Get-NetIPConfiguration -InterfaceAlias "Ethernet*").IPv4Address.IPAddress.Trim()
           $content = Get-Content "win_Dockerfile_template"
           $content | ForEach-Object { 
@@ -138,22 +133,14 @@ jobs:
           #ssh $env:SSH_HOST -p $env:SSH_PORT "cd $env:CODE_ROOT && pip install -e ."
           ssh $env:SSH_HOST -p $env:SSH_PORT "pip install -e file://c:/src/ipyparallel#egg=ipyparallel[test]"
 
-          # just to see the ip-address of runner vm
-          echo "ipconfig host:"
-          ipconfig
-          echo "gethostbyname_ex host:"
-          python -c "import socket;print('hostname:',socket.gethostname());print('gethostbyname_ex:',socket.gethostbyname_ex(socket.gethostname()))"
-          echo "docker network ls:"
-          docker network ls
-          echo "ipconfig container:"
-          docker run ipyparallel-sshd ipconfig
-          echo "gethostbyname_ex container:"
-          docker run ipyparallel-sshd python -c "import socket;print('hostname:','$env:computername');print('gethostbyname_ex:',socket.gethostbyname_ex('$env:computername'))"
-          #docker run ipyparallel-sshd cmd.exe /C type c:\Windows\System32\Drivers\etc\hosts
+          # we need to disable the windows firewall for github runners otherwise the ipyparallel engines cannot connect to the controller.
+          # obviously, a more precautious adaption of the firewall would be desirable. since an adaption of the firewall is NOT necessary 
+          # for a local standard windows environment, no further improvements were made.  
+          echo "Disable Firewall:"
+          Set-NetFirewallProfile -Profile Domain, Public, Private -Enabled False
 
-          #echo "Firewall status:"
-          #Get-NetFirewallProfile | Format-Table Name, Enabled
-          docker run ipyparallel-sshd ping $env:computername
+          echo "Check if container can ping the docker host (requires adapted hosts file and firewall disabled)"
+          docker run ipyparallel-sshd ping -n 1 $env:computername
 
       - name: Set up slurm
         if: ${{ matrix.cluster_type == 'slurm' }}

@@ -2,12 +2,8 @@ services:
   sshd:
     image: ipyparallel-sshd
     tty: true
-    #isolation: 'hyperv'
     build:
       context: ../..
       dockerfile: ci/ssh/win_Dockerfile
     ports:
       - "2222:22"
-    extra_hosts:
-      #just for testing
-      jo: 128.131.72.10
