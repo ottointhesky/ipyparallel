@@ -8,95 +8,28 @@ import pytest
 
 from ipyparallel.cluster.shellcmd import Platform, ShellCommandSend
 
+# some helper variables to keep subsequent senders block more compact
 windows_py_path = 'python'
 linux_py_path = '/opt/conda/bin/python3'
+no_init = {"initialize": False}
+use_sending = {"initialize": False, "send_receiver_class": True}
+pwsh = ["powershell.exe"]
+ssh_args = ["-p", "2222", "ciuser@127.0.0.1"]
 
 senders = [
-    (
-        "windows",
-        ShellCommandSend(["cmd.exe"], ["/C"], sys.executable, initialize=False),
-    ),
-    (
-        "windows",
-        ShellCommandSend(
-            ["cmd.exe"], ["/C"], sys.executable, initialize=False, send_receiver_class=1
-        ),
-    ),
-    (
-        "windows",
-        ShellCommandSend(
-            ["powershell.exe"], ["-Command"], sys.executable, initialize=False
-        ),
-    ),
-    (
-        "windows",
-        ShellCommandSend(
-            ["powershell.exe"],
-            ["-Command"],
-            sys.executable,
-            initialize=False,
-            send_receiver_class=1,
-        ),
-    ),
-    (
-        "windows",
-        ShellCommandSend(
-            ["ssh"],
-            ["-p", "2222", "ciuser@127.0.0.1"],
-            windows_py_path,
-            initialize=False,
-        ),
-    ),
-    (
-        "windows",
-        ShellCommandSend(
-            ["ssh"],
-            ["-p", "2222", "ciuser@127.0.0.1"],
-            windows_py_path,
-            initialize=False,
-            send_receiver_class=1,
-        ),
-    ),
-    (
-        "wsl",
-        ShellCommandSend(
-            ["bash"], ["-c"], "python3", initialize=False, send_receiver_class=1
-        ),
-    ),
-    ("linux", ShellCommandSend(["/usr/bin/bash"], ["-c"], "python3", initialize=False)),
-    (
-        "linux",
-        ShellCommandSend(
-            ["/usr/bin/bash"],
-            ["-c"],
-            "python3",
-            initialize=False,
-            send_receiver_class=1,
-        ),
-    ),
-    (
-        "linux",
-        ShellCommandSend(
-            ["ssh"], ["-p", "2222", "ciuser@127.0.0.1"], linux_py_path, initialize=False
-        ),
-    ),
-    (
-        "linux",
-        ShellCommandSend(
-            ["ssh"],
-            ["-p", "2222", "ciuser@127.0.0.1"],
-            linux_py_path,
-            initialize=False,
-            send_receiver_class=1,
-        ),
-    ),
-    ("macos", ShellCommandSend(["/bin/bash"], ["-c"], "python3", initialize=False)),
-    (
-        "macos",
-        ShellCommandSend(
-            ["/bin/bash"], ["-c"], "python3", initialize=False, send_receiver_class=1
-        ),
-    ),
+    ("windows", ShellCommandSend(["cmd.exe"], ["/C"], sys.executable, **no_init)),
+    ("windows", ShellCommandSend(["cmd.exe"], ["/C"], sys.executable, **use_sending)),
+    ("windows", ShellCommandSend(pwsh, ["-Command"], sys.executable, **no_init)),
+    ("windows", ShellCommandSend(pwsh, ["-Command"], sys.executable, **use_sending)),
+    ("windows", ShellCommandSend(["ssh"], ssh_args, windows_py_path, **no_init)),
+    ("windows", ShellCommandSend(["ssh"], ssh_args, windows_py_path, **use_sending)),
+    ("wsl", ShellCommandSend(["bash"], ["-c"], "python3", **use_sending)),
+    ("linux", ShellCommandSend(["/usr/bin/bash"], ["-c"], "python3", **no_init)),
+    ("linux", ShellCommandSend(["/usr/bin/bash"], ["-c"], "python3", **use_sending)),
+    ("linux", ShellCommandSend(["ssh"], ssh_args, linux_py_path, **no_init)),
+    ("linux", ShellCommandSend(["ssh"], ssh_args, linux_py_path, **use_sending)),
+    ("macos", ShellCommandSend(["/bin/bash"], ["-c"], "python3", **no_init)),
+    ("macos", ShellCommandSend(["/bin/bash"], ["-c"], "python3", **use_sending)),
 ]
 
 sender_ids = [
