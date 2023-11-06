@@ -672,7 +672,9 @@ class ShellCommandSend:
                 shell = val
 
         if self.platform == Platform.Windows and self.python_path is not None:
-            self.break_away_support = False  # self._check_for_break_away_flag() #temporary disable break away check
+            self.break_away_support = (
+                self._check_for_break_away_flag()
+            )  # check if break away flag is available
 
         self.shell_info = (system, shell)
 
@@ -845,14 +847,3 @@ class ShellCommandSend:
         """delete remote file"""
         assert self.shell_info  # make sure that initialize was called already
         output = self._cmd_send("remove", p)
-
-
-# test some test code, which can be removed later on
-# import sys
-# sender = ShellCommandSend(["cmd.exe"], ["/C"], sys.executable, send_receiver_class=1,log="${userdir}/shellcmd.log")
-# sender = ShellCommandSend(["ssh"], ["-p", "2222", "ciuser@127.0.0.1"], "python", send_receiver_class=1)
-# sender.break_away_support = False
-# sender = ShellCommandSend(["/usr/bin/bash"], ["-c"], sys.executable, send_receiver_class=1)
-# pid = sender.cmd_start_python_code( "print('hallo johannes')", output_file="output.txt" )
-# pid = sender.cmd_start( ['ping', '-n', '5', '127.0.0.1'], output_file="output.txt" )
-# print(f"pid={pid}")
