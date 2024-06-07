@@ -133,7 +133,7 @@ jobs:
 
           # zip ipyparallel files (excluding files probably not needed)
           cd ../..
-          $exclude = @("__pycache__","node_modules")
+          $exclude = @("__pycache__", "node_modules", ".yarn")
           $files = Get-ChildItem -Path "." -Exclude $exclude
           Compress-Archive -Path $files -DestinationPath ipyparallel.zip -CompressionLevel Fastest
           # copy file into docker (we need to do it over ssh since docker copy or mount doesn't work in Hyper-V)
