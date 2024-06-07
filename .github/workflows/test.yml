@@ -146,7 +146,7 @@ jobs:
           # just to see the content of pyproject.toml 
           ssh $env:SSH_HOST -p $env:SSH_PORT "dir c:\src\ipyparallel"
           ssh $env:SSH_HOST -p $env:SSH_PORT "type c:\src\ipyparallel\pyproject.toml"
-          ssh $env:SSH_HOST -p $env:SSH_PORT "pip install -e file://c:/src/ipyparallel#egg=ipyparallel[test]"
+          ssh $env:SSH_HOST -p $env:SSH_PORT "pip install -v -e file://c:/src/ipyparallel#egg=ipyparallel[test]"
 
           # we need to disable the windows firewall for github runners otherwise the ipyparallel engines cannot connect to the controller.
           # obviously, a more precautious adaption of the firewall would be desirable. since an adaption of the firewall is NOT necessary
@@ -158,7 +158,7 @@ jobs:
           echo "Check pip inside container"
           ssh $env:SSH_HOST -p $env:SSH_PORT "where pip"
           ssh $env:SSH_HOST -p $env:SSH_PORT "pip list"
-          ssh $env:SSH_HOST -p $env:SSH_PORT "python -c 'import ipyparallel'"
+          ssh $env:SSH_HOST -p $env:SSH_PORT "python -c """"import ipyparallel;print('import ipyparallel successful')"""""
 
           echo "Check if container can ping the docker host (requires adapted hosts file and firewall disabled)"
           docker run ipyparallel-sshd ping -n 1 $env:computername
