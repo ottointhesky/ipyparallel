@@ -6,6 +6,8 @@ SHELL ["powershell"]
 ENV PYTHON_VERSION 3.8.10
 ENV PYTHON_RELEASE 3.8.10
 
+ENV IPP_DISABLE_JS 1
+
 # the following env variable values will be 'statically' replaced by the corresponding github workflow script
 # if the values aren't replaced the container hosts file isn't changed which is typically no problem in a local
 # environment. but it's a necessity for github runners, since the host name resolution inside the container doesn't
