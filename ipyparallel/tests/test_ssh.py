@@ -1,14 +1,17 @@
-from functools import partial
 import os
+from functools import partial
+
 import pytest
 from traitlets.config import Config
 
 from .conftest import Cluster as BaseCluster  # noqa: F401
-from .test_cluster import test_get_output  # noqa: F401
-from .test_cluster import test_restart_engines  # noqa: F401
-from .test_cluster import test_signal_engines  # noqa: F401
-from .test_cluster import test_start_stop_cluster  # noqa: F401
-from .test_cluster import test_to_from_dict  # noqa: F401
+from .test_cluster import (
+    test_get_output,  # noqa: F401
+    test_restart_engines,  # noqa: F401
+    test_signal_engines,  # noqa: F401
+    test_start_stop_cluster,  # noqa: F401
+    test_to_from_dict,  # noqa: F401
+)
 
 # import tests that use engine_launcher_class fixture
 
@@ -17,11 +20,10 @@ from .test_cluster import test_to_from_dict  # noqa: F401
 def ssh_config(ssh_dir, request, copy_shellcmd_docker_log):
     windows = True if os.name == "nt" else False
 
-    if windows and request.param == "SSHProxy":     # SSHProxy currently not working under Windows
+    if (
+        windows and request.param == "SSHProxy"
+    ):  # SSHProxy currently not working under Windows
         pytest.skip("Proxy tests currently not working under Windows")
-
-    if windows and "GITHUB_RUNNER" in os.environ:
-        pytest.skip("Disable windows ssh tests in github runners")
 
     c = Config()
     c.Cluster.controller_ip = '0.0.0.0'

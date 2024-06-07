@@ -11,6 +11,7 @@ Currently, the following command are supported:
 * exists:  checks if a file/directory exists
 * remove:  removes a file
 """
+
 import base64
 import enum
 import inspect
@@ -169,7 +170,10 @@ class ShellCommandReceive:
             )
 
             flags = 0
-            if self.use_break_way != False:
+            assert (
+                self.use_break_way is not None
+            )  # make sure that use_break_way is True or False
+            if self.use_break_way:
                 flags |= CREATE_NEW_CONSOLE
                 flags |= CREATE_BREAKAWAY_FROM_JOB
 
@@ -189,7 +193,10 @@ class ShellCommandReceive:
 
             print(f'__remote_pid={p.pid}__')
             sys.stdout.flush()
-            if self.use_break_way == False:
+            assert (
+                self.use_break_way is not None
+            )  # make sure that use_break_way is True or False
+            if not self.use_break_way:
                 self._log("before wait")
                 p.wait()
                 self._log("after wait")
@@ -462,7 +469,7 @@ class ShellCommandSend:
 
         if self.debugging:
             receiver_params.append("debugging=True")
-        if self.break_away_support == False:
+        if self.break_away_support is not None and not self.break_away_support:
             receiver_params.append("use_break_way=False")
         if self.log:
             receiver_params.append("log='${userdir}/shellcmd.log'")
@@ -480,7 +487,11 @@ class ShellCommandSend:
         )
         py_cmd += ")"
         cmd_args = self.shell + self.args + [self.python_path]
-        if cmd == 'start' and self.break_away_support == False:
+        if (
+            cmd == 'start'
+            and self.break_away_support is not None
+            and not self.break_away_support
+        ):
             assert self.platform == Platform.Windows
             from subprocess import DETACHED_PROCESS
 
@@ -672,9 +683,7 @@ class ShellCommandSend:
                 shell = val
 
         if self.platform == Platform.Windows and self.python_path is not None:
-            self.break_away_support = (
-                self._check_for_break_away_flag()
-            )  # check if break away flag is available
+            self.break_away_support = self._check_for_break_away_flag()  # check if break away flag is available (its not in windows github runners)
 
         self.shell_info = (system, shell)
 
@@ -847,3 +856,14 @@ class ShellCommandSend:
         """delete remote file"""
         assert self.shell_info  # make sure that initialize was called already
         output = self._cmd_send("remove", p)
+
+
+# test some test code, which can be removed later on
+# import sys
+# sender = ShellCommandSend(["cmd.exe"], ["/C"], sys.executable, send_receiver_class=1,log="${userdir}/shellcmd.log")
+# sender = ShellCommandSend(["ssh"], ["-p", "2222", "ciuser@127.0.0.1"], "python", send_receiver_class=1)
+# sender.break_away_support = False
+# sender = ShellCommandSend(["/usr/bin/bash"], ["-c"], sys.executable, send_receiver_class=1)
+# pid = sender.cmd_start_python_code( "print('hallo johannes')", output_file="output.txt" )
+# pid = sender.cmd_start( ['ping', '-n', '5', '127.0.0.1'], output_file="output.txt" )
+# print(f"pid={pid}")

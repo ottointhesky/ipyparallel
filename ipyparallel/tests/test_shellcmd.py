@@ -1,4 +1,5 @@
 """test shell command classes"""
+
 import signal
 import sys
 import time
@@ -54,9 +55,9 @@ def shellcmd_test_cmd():
     """returns a command that runs for 5 seconds"""
     test_command = {}
     test_command["windows"] = 'ping -n 5 127.0.0.1'
-    test_command[
-        "linux"
-    ] = 'ping -c 5 127.0.0.1'  # ping needs to be installed to the standard ubuntu docker image
+    test_command["linux"] = (
+        'ping -c 5 127.0.0.1'  # ping needs to be installed to the standard ubuntu docker image
+    )
     test_command["macos"] = 'ping -c 5 127.0.0.1'
     return test_command
 
@@ -101,7 +102,7 @@ def test_shellcmds(platform, sender, shellcmd_test_cmd, ssh_running):
     # initialize sender class
     sender.initialize()
 
-    if sender.break_away_support == False:
+    if sender.break_away_support is not None and not sender.break_away_support:
         with pytest.warns(UserWarning):
             warnings.warn(
                 "Break away process creation flag is not available (known issue for Github Runners)",
@@ -139,17 +140,22 @@ def test_shellcmds(platform, sender, shellcmd_test_cmd, ssh_running):
     sender.cmd_rmdir(test_dir)
     assert sender.cmd_exists(test_dir) is False
 
+    # output environment (just for testing)
+    # if sender.platform != Platform.Windows:
+    #    pid = sender.cmd_start("env", output_file="env_output.txt")
+    #    print_file(sender, "env_output.txt")
+
     # do start operation test
     redirect_output_file = prefix + "output.txt"
     pid = sender.cmd_start(test_cmd, output_file=redirect_output_file)
     assert pid > 0
-    if sender.cmd_running(pid) == False:
+    if not sender.cmd_running(pid):
         print_file(sender, redirect_output_file)
     # assert sender.cmd_running(pid) is True
 
     sender.cmd_kill(pid, signal.SIGTERM)
 
-    if sender.cmd_running(pid) == False:
+    if not sender.cmd_running(pid):
         print_file(sender, redirect_output_file)
 
     assert sender.cmd_running(pid) is False

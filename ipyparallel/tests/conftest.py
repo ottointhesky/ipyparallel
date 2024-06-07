@@ -1,4 +1,5 @@
 """pytest fixtures"""
+
 import inspect
 import logging
 import os
@@ -214,7 +215,7 @@ def ssh_dir(request):
     return ssh_dir
 
 
-# ssh_key fixture not needed any more, since id_rsa is copied during docker-compose
+# ssh_key fixture not needed any more, since id_rsa is copied during docker-compose stage
 # @pytest.fixture
 # def ssh_key(tmpdir, ssh_dir):
 #     key_file = tmpdir.join("id_rsa")
