@@ -56,9 +56,9 @@ RUN $baseurl = 'https://nodejs.org/dist/latest/'; \
 	\
 	choco install visualstudio2022buildtools -y; \
 	\
-    Write-Host 'Complete.'; \
-    \
-    type C:\ProgramData\chocolatey\logs\chocolatey.log ; \
+	Write-Host 'Complete.'; \
+	\
+	type C:\ProgramData\chocolatey\logs\chocolatey.log ; \
 	\
 	$env:PATH = [Environment]::GetEnvironmentVariable('PATH', [EnvironmentVariableTarget]::Machine); \
 	\
