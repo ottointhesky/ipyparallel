@@ -44,12 +44,20 @@ RUN $baseurl = 'https://nodejs.org/dist/latest/'; \
 	Write-Host 'Complete.'; \
 	\
 #installing VC++ 2015-2022 Redistributable Package
-	Write-Host 'Installing VC++ 2015-2022 Redistributable Package...'; \
+	Write-Host 'Installing VC++ 2015-2022 Redistributable Package (x64)...'; \
 	\
     [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; \
 	Invoke-WebRequest "https://aka.ms/vs/17/release/vc_redist.x64.exe" -OutFile "vc_redist.x64.exe"; \
 	Start-Process -filepath C:\vc_redist.x64.exe -ArgumentList "/install", "/passive", "/norestart" -Passthru | Wait-Process; \
 	Remove-Item -Force vc_redist.x64.exe; \
+	$env:PATH = [Environment]::GetEnvironmentVariable('PATH', [EnvironmentVariableTarget]::Machine); \
+	\
+	Write-Host 'Installing VC++ 2015-2022 Redistributable Package (x86)...'; \
+	\
+    [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; \
+	Invoke-WebRequest "https://aka.ms/vs/17/release/vc_redist.x86.exe" -OutFile "vc_redist.x86.exe"; \
+	Start-Process -filepath C:\vc_redist.x86.exe -ArgumentList "/install", "/passive", "/norestart" -Passthru | Wait-Process; \
+	Remove-Item -Force vc_redist.x86.exe; \
 	$env:PATH = [Environment]::GetEnvironmentVariable('PATH', [EnvironmentVariableTarget]::Machine); \
 	\
 	Write-Host 'Complete.'; \
