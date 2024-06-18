@@ -22,7 +22,6 @@ class CustomHook(BuildHookInterface):
         if sys.platform.startswith("win32") and os.path.exists("c:\\src"):
             with open("c:\\src\\env.txt", "w") as f:
                 f.write("os.environ=" + str(os.environ) + "\n")
-        return
 
         if os.environ.get("IPP_DISABLE_JS") == "1":
             print("Skipping js installation")
