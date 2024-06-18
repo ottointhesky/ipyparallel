@@ -147,8 +147,7 @@ jobs:
           # just to see the content of pyproject.toml 
           #ssh $env:SSH_HOST -p $env:SSH_PORT "dir c:\src\ipyparallel"
           #ssh $env:SSH_HOST -p $env:SSH_PORT "type c:\src\ipyparallel\pyproject.toml"
-          ssh $env:SSH_HOST -p $env:SSH_PORT "[System.Environment]::SetEnvironmentVariable('IPP_DISABLE_JS','1', 'User');"
-          ssh $env:SSH_HOST -p $env:SSH_PORT "echo IPP_DISABLE_JS=$env:IPP_DISABLE_JS"
+          #ssh $env:SSH_HOST -p $env:SSH_PORT "echo IPP_DISABLE_JS=$env:IPP_DISABLE_JS"
           ssh $env:SSH_HOST -p $env:SSH_PORT "pip install -e file://c:/src/ipyparallel#egg=ipyparallel[test]"
           ssh $env:SSH_HOST -p $env:SSH_PORT "type c:\src\env.txt"
 
@@ -162,7 +161,6 @@ jobs:
           echo "Check pip inside container"
           ssh $env:SSH_HOST -p $env:SSH_PORT "where pip"
           ssh $env:SSH_HOST -p $env:SSH_PORT "pip list"
-          # ssh $env:SSH_HOST -p $env:SSH_PORT "python -c """"import ipyparallel;print('import ipyparallel successful')"""""
 
           echo "Check if container can ping the docker host (requires adapted hosts file and firewall disabled)"
           docker run ipyparallel-sshd ping -n 1 $env:computername
