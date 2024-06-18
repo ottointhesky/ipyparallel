@@ -43,25 +43,6 @@ RUN $baseurl = 'https://nodejs.org/dist/latest/'; \
 	\
 	Write-Host 'Complete.'; \
 	\
-#installing chocolatey & Visual Studio 2022 Build Tools
-	Write-Host 'Installing chocolatey...'; \
-	\
-	Set-ExecutionPolicy Bypass -Scope Process -Force; \
-	[System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; \
-	iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1')); \
-	\
-	Write-Host 'Complete.'; \
-	\
-	Write-Host 'Installing Visual Studio 2022 Build Tools (using chocolatey)...'; \
-	\
-	choco install visualstudio2022buildtools -y; \
-	\
-	Write-Host 'Complete.'; \
-	\
-	type C:\ProgramData\chocolatey\logs\chocolatey.log ; \
-	\
-	$env:PATH = [Environment]::GetEnvironmentVariable('PATH', [EnvironmentVariableTarget]::Machine); \
-	\
 #add the docker host name and ip to the container hosts file (needed for the github runners since the docker host name resolution doesn't work there)
 	$hostsfile='C:\Windows\System32\drivers\etc\hosts'; \
 	$line=\"$env:docker_host_ip $env:docker_host_name\"; \
