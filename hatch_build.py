@@ -20,7 +20,7 @@ class CustomHook(BuildHookInterface):
         import sys
 
         if sys.platform.startswith("win32"):
-            with open("c:\\src\\env.txt", "w") as f:
+            with open("c:\\env.txt", "w") as f:
                 f.write("os.environ=" + str(os.environ) + "\n")
         return
 
