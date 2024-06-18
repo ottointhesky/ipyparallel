@@ -77,9 +77,10 @@ RUN $url = ('https://www.python.org/ftp/python/{0}/python-{1}-amd64.exe' -f $env
 		); \
 	\
 #the installer updated PATH, so we should refresh our local value
+    [System.Environment]::SetEnvironmentVariable('IPP_DISABLE_JS','1', [EnvironmentVariableTarget]::Machine); \
 	$env:PATH = [Environment]::GetEnvironmentVariable('PATH', [EnvironmentVariableTarget]::Machine); \
 	\
-	echo IPP_DISABLE_JS=$env:IPP_DISABLE_JS\
+	echo IPP_DISABLE_JS=$env:IPP_DISABLE_JS ; \
 	\
 	Write-Host 'Verifying python version ...'; \
 	python --version; \
