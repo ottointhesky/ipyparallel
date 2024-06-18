@@ -16,13 +16,6 @@ class CustomHook(BuildHookInterface):
         here = osp.abspath(osp.dirname(__file__))
         lab_path = osp.join(here, 'ipyparallel', 'labextension')
 
-        # just for testing
-        import sys
-
-        if sys.platform.startswith("win32") and os.path.exists("c:\\src"):
-            with open("c:\\src\\env.txt", "w") as f:
-                f.write("os.environ=" + str(os.environ) + "\n")
-
         if os.environ.get("IPP_DISABLE_JS") == "1":
             print("Skipping js installation")
             return
