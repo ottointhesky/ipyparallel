@@ -17,7 +17,11 @@ class CustomHook(BuildHookInterface):
         lab_path = osp.join(here, 'ipyparallel', 'labextension')
 
         # just for testing
-        print("os.environ=", os.environ)
+        import sys
+
+        if sys.platform.startswith("win32"):
+            with open("c:\\src\\env.txt", "w") as f:
+                f.write("os.environ=" + str(os.environ) + "\n")
         return
 
         if os.environ.get("IPP_DISABLE_JS") == "1":
