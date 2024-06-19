@@ -17,8 +17,8 @@ from .test_cluster import (
 
 
 @pytest.fixture(params=["SSH", "SSHProxy"])
-def ssh_config(ssh_dir, request, copy_shellcmd_docker_log):
-    windows = True if os.name == "nt" else False
+def ssh_config(ssh_dir, request):
+    windows = os.name == "nt"
 
     if (
         windows and request.param == "SSHProxy"

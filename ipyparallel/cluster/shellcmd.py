@@ -15,7 +15,6 @@ Currently, the following command are supported:
 import base64
 import enum
 import inspect
-import json
 import os
 import re
 import shlex
@@ -81,10 +80,10 @@ class ShellCommandReceive:
     """
     Helper class for receiving and performing shell commands in a platform independent form
 
-    All supported shell commands have a cmd_ prefix. When adding new functions make sure that the is an
-    equivalent in the ShellCommandSend class. When a command failed a non zero exit code will be returned.
+    All supported shell commands have a cmd_ prefix. When adding new functions make sure that there is an
+    equivalent in the ShellCommandSend class. When a command failed a non-zero exit code will be returned.
     Hence, the ShellCommandSend class always uses subprocess.check_output for assessing if the command was
-    successfull. Some command require information to be returned (cmd_exists, cmd_start, cmd_running) which
+    successful. Some command require information to be returned (cmd_exists, cmd_start, cmd_running) which
     is written to stdout in the following form: __<key>=<value>__
     """
 
@@ -93,11 +92,12 @@ class ShellCommandReceive:
             return
         self.log.info(f"[id={self.ranid}] {msg}")
 
-    def __init__(self, debugging=False, use_break_way=True, log=None):
+    def __init__(self, debugging=False, use_breakaway=True, log=None):
         self.debugging = debugging
         self.log = None
         self.platform = Platform.get()
-        self.use_break_way = use_break_way
+        self.use_breakaway = use_breakaway
+        assert isinstance(self.use_breakaway, bool)
         if log:
             if isinstance(log, str):
                 self.log = SimpleLog(log)
@@ -115,33 +115,17 @@ class ShellCommandReceive:
         if self.log:
             self._log("ShellCommandReceive instance deleted")
 
-    def _linux_quote(self, p):
-        if "'" in p:
-            return '"' + p + '"'
-        else:
-            return p
-
     def cmd_start(self, start_cmd, env=None, output_file=None):
         if env:
-            # add provided entries to environment
-            if isinstance(env, str):
-                if env[0] == '"' and env[-1] == '"':
-                    env = env.strip('"')  # occurs under windows cmd
-                if "\\'" in env:
-                    env = env.replace("\\'", "'")  # replace quoted
-                env_dict = eval(env)
-                assert isinstance(env_dict, dict) is True
-                env = env_dict
-
-            assert isinstance(env, dict) is True  # make sure that env is a dictionary
+            self._log(f"env={env!r}")
+            if not isinstance(env, dict):
+                raise TypeError(f"env must be a dict, got {env!r}")
 
             # update environment
             for key, value in env.items():
                 if value is not None and value != '':
-                    if isinstance(value, dict):
-                        os.environ[key] = json.dumps(value)
-                    else:
-                        os.environ[key] = str(value)
+                    # set entry
+                    os.environ[key] = str(value)
                 else:
                     # unset entry if needed
                     if key in os.environ:
@@ -150,16 +134,16 @@ class ShellCommandReceive:
         if isinstance(start_cmd, str):
             start_cmd = [start_cmd]
 
+        if not all(isinstance(item, str) for item in start_cmd):
+            raise TypeError(f"Only str in start_cmd allowed ({start_cmd!r})")
+
         if self.platform == Platform.Windows:
             # under windows we need to remove embracing double quotes
             for idx, p in enumerate(start_cmd):
-                if not isinstance(p, str):
-                    start_cmd[idx] = str(p)
-                    continue
                 if p[0] == '"' and p[-1] == '"':
                     start_cmd[idx] = p.strip('"')
 
-        self._log(f"start_cmd={start_cmd}  (use_break_way={self.use_break_way})")
+        self._log(f"start_cmd={start_cmd}  (use_breakaway={self.use_breakaway})")
 
         if self.platform == Platform.Windows:
             from subprocess import (
@@ -170,10 +154,7 @@ class ShellCommandReceive:
             )
 
             flags = 0
-            assert (
-                self.use_break_way is not None
-            )  # make sure that use_break_way is True or False
-            if self.use_break_way:
+            if self.use_breakaway:
                 flags |= CREATE_NEW_CONSOLE
                 flags |= CREATE_BREAKAWAY_FROM_JOB
 
@@ -193,21 +174,22 @@ class ShellCommandReceive:
 
             print(f'__remote_pid={p.pid}__')
             sys.stdout.flush()
-            assert (
-                self.use_break_way is not None
-            )  # make sure that use_break_way is True or False
-            if not self.use_break_way:
+            if not self.use_breakaway:
                 self._log("before wait")
                 p.wait()
                 self._log("after wait")
         else:
-            start_cmd = [self._linux_quote(x) for x in start_cmd]
+            from subprocess import DEVNULL, Popen
 
+            fo = DEVNULL
             if output_file:
-                nohup_start = f"nohup {' '.join(start_cmd)} >{output_file} 2>&1 </dev/null & echo __remote_pid=$!__"
-            else:
-                nohup_start = f"nohup {' '.join(start_cmd)} >/dev/null 2>&1 </dev/null & echo __remote_pid=$!__"
-            os.system(nohup_start)
+                fo = open(output_file, "w")
+
+            p = Popen(
+                start_cmd, start_new_session=True, stdout=fo, stderr=fo, stdin=DEVNULL
+            )
+            print(f'__remote_pid={p.pid}__')
+            sys.stdout.flush()
 
     def cmd_running(self, pid):
         self._log(f"Check if pid {pid} is running")
@@ -236,8 +218,12 @@ class ShellCommandReceive:
                     print('__running=0__')
                 ctypes.windll.kernel32.CloseHandle(processHandle)
         else:
-            ps_cmd = f'ps -p {pid} > /dev/null && echo "__running=1__" || echo "__running=0__"'
-            os.system(ps_cmd)
+            try:
+                # use os.kill with signal 0 to check if process is still running
+                os.kill(pid, 0)
+                print('__running=1__')
+            except OSError:
+                print('__running=0__')
 
     def cmd_kill(self, pid, sig=None):
         self._log(f"Kill pid {pid} (signal={sig})")
@@ -315,6 +301,13 @@ class ShellCommandSend:
     Beside generic check_output[...] functions (equivalent to subprocess.check_output), the class provides
     specific shell commands which have a cmd_ prefix. When adding new functions make sure that an
     equivalent is added in the ShellCommandReceive class as well.
+
+    To start processes through an ssh connection on a windows server that stays alife after the ssh connection
+    is closed, the process must be started with the breakaway creation flag set. Which works fine on 'normal'
+    machine and VMs is denied on windows github runners (I guess because of security reasons). Hence, it was
+    necessary to implement a work-a-round to enable CI in github. In case breakaway is not supported, a detached
+    ssh connection is started (by the ShellCommandSend object) which stays open until the process to start has
+    finished. see _cmd_send for further details.
     """
 
     package_name = "ipyparallel.shellcmd"  # package name for send the command
@@ -343,9 +336,7 @@ class ShellCommandSend:
         self.shell_info = None
         self.platform = Platform.Unknown  # platform enum of shell
         self.is_powershell = None  # flag if shell is windows powershell (requires special parameter quoting)
-        self.break_away_support = (
-            None  # flag if process creation support the break_away flag (windows only)
-        )
+        self.breakaway_support = None  # flag if process creation support the break_away flag (relevant for windows only; None under linux)
         self.join_params = True  # join all cmd params into a single param. does NOT work with windows cmd
         self.pathsep = (
             "/"  # equivalent to os.pathsep (will be changed during initialization)
@@ -388,7 +379,7 @@ class ShellCommandSend:
         elif isinstance(cmd, list):
             return cmd
         else:
-            raise Exception("Unknown command type")
+            raise TypeError(f"Unknown command type: {cmd!r}")
 
     @staticmethod
     def _format_for_python(param):
@@ -467,10 +458,24 @@ class ShellCommandSend:
         receiver_params = []
         param_str = ""
 
+        # make sure that env is a dictionary with only str entries (for key and value; value can be null as well)
+        if "env" in kwargs and kwargs["env"]:
+            env = kwargs["env"]
+            assert isinstance(env, dict)
+            for key, value in env.items():
+                if not isinstance(key, str):
+                    raise TypeError(
+                        f"str expected in env dict: inappropriate key type ({key!r})."
+                    )
+                if value and not isinstance(value, str):
+                    raise TypeError(
+                        f"str expected in env dict: inappropriate value type ({value!r}) for key '{key}'"
+                    )
+
         if self.debugging:
             receiver_params.append("debugging=True")
-        if self.break_away_support is not None and not self.break_away_support:
-            receiver_params.append("use_break_way=False")
+        if self.breakaway_support is False:
+            receiver_params.append("use_breakaway=False")
         if self.log:
             receiver_params.append("log='${userdir}/shellcmd.log'")
 
@@ -487,18 +492,14 @@ class ShellCommandSend:
         )
         py_cmd += ")"
         cmd_args = self.shell + self.args + [self.python_path]
-        if (
-            cmd == 'start'
-            and self.break_away_support is not None
-            and not self.break_away_support
-        ):
+        if cmd == 'start' and self.breakaway_support is False:
             assert self.platform == Platform.Windows
             from subprocess import DETACHED_PROCESS
 
             # if windows platform doesn't support break away flag (e.g. Github Runner)
             # we need to start a detached process (as work-a-round), the runs until the
-            # 'remote' process has finished. But we cannot direectly start the command as detached
-            # process, since redirection (for retreiving the pid) doesn't work. We need a detached
+            # 'remote' process has finished. But we cannot directly start the command as detached
+            # process, since redirection (for retrieving the pid) doesn't work. We need a detached
             # proxy process that redirects output the to file, that can be read by current process
             # to retrieve the pid.
 
@@ -513,7 +514,7 @@ class ShellCommandSend:
             with open(fi_name, "w") as f:
                 f.write(py_cmd)
 
-            # simple python code that starts the actual cmd in a non detachted
+            # simple python code that starts the actual cmd in a detached process
             cmd_args_str = ", ".join(f'{self._format_for_python(c)}' for c in cmd_args)
             if self.log:
                 detach_log = SimpleLog("${userdir}/detach.log").filename
@@ -683,7 +684,7 @@ class ShellCommandSend:
                 shell = val
 
         if self.platform == Platform.Windows and self.python_path is not None:
-            self.break_away_support = self._check_for_break_away_flag()  # check if break away flag is available (its not in windows github runners)
+            self.breakaway_support = self._check_for_break_away_flag()  # check if break away flag is available (its not in windows github runners)
 
         self.shell_info = (system, shell)
 
@@ -754,18 +755,14 @@ class ShellCommandSend:
     def cmd_start(self, cmd, env=None, output_file=None):
         """starts command into background and return remote pid
         :param cmd: command (str or list of strs) that should be started
-        :param env: dictionary of environment variable that should be set before starting the process
+        :param env: dictionary of environment variable that should be set/unset before starting the process
         :param output_file: stdout and stderr will be redirected to the (remote) file
         :return: pid of started process
         """
         # join commands into a single parameter. otherwise
         assert self.shell_info  # make sure that initialize was called already
-        if self.platform == Platform.Windows:
-            # for windows shells we need to split program and arguments into a list
-            if isinstance(cmd, str):
-                paramlist = shlex.split(cmd)
-            else:
-                paramlist = self._as_list(cmd)
+        if isinstance(cmd, str):
+            paramlist = shlex.split(cmd)
         else:
             paramlist = self._as_list(cmd)
 
@@ -859,11 +856,36 @@ class ShellCommandSend:
 
 
 # test some test code, which can be removed later on
+# connection_dict = {
+#            "ssh": "",
+#            "interface": "tcp://*",
+#            "registration": 60691,
+#            "control": 60692,
+#            "mux": 60693,
+#            "task": 60694,
+#            "iopub": 60695,
+#            "hb_ping": 60696,
+#            "hb_pong": 60697,
+#            "broadcast": [60698, 60699],
+#            "key": "169b682b-337c645951e7d47723061090",
+#            "curve_serverkey": "null",
+#            "location": "host",
+#            "pack": "json",
+#            "unpack": "json",
+#            "signature_scheme": "hmac-sha256",
+# }
+# env_dict = {
+#        "IPP_CLUSTER_ID": "",
+#        "IPP_PROFILE_DIR": r"~/.ipython/profile_ssh",
+#        "IPP_CONNECTION_INFO": json.dumps(connection_dict),
+# }
+
 # import sys
 # sender = ShellCommandSend(["cmd.exe"], ["/C"], sys.executable, send_receiver_class=1,log="${userdir}/shellcmd.log")
+# sender.debugging = True
 # sender = ShellCommandSend(["ssh"], ["-p", "2222", "ciuser@127.0.0.1"], "python", send_receiver_class=1)
 # sender.break_away_support = False
 # sender = ShellCommandSend(["/usr/bin/bash"], ["-c"], sys.executable, send_receiver_class=1)
 # pid = sender.cmd_start_python_code( "print('hallo johannes')", output_file="output.txt" )
-# pid = sender.cmd_start( ['ping', '-n', '5', '127.0.0.1'], output_file="output.txt" )
+# pid = sender.cmd_start( ['ping', '-n', '5', '127.0.0.1'], env=env_dict) #, output_file="output.txt" )
 # print(f"pid={pid}")
