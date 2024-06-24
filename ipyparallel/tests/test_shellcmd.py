@@ -154,7 +154,7 @@ def test_shellcmds(platform, sender, shellcmd_test_cmd, ssh_running):
     prefix = ""
     if Platform.get() == Platform.Windows:
         if platform == "wsl":
-            # pytest.skip("wsl deactivated")  # comment to activate wsl tests
+            pytest.skip("wsl deactivated")  # comment to activate wsl tests
             prefix = "/home/johannes/"
         elif platform != "windows":
             pytest.skip("other platform")
@@ -181,8 +181,8 @@ def test_shellcmds(platform, sender, shellcmd_test_cmd, ssh_running):
             stacklevel=2,
         )
 
-    if Platform.get() == Platform.Windows:
-        sender.breakaway_support = False  # just for testing
+    # if Platform.get() == Platform.Windows:
+    #    sender.breakaway_support = False  # just for testing
 
     info = sender.get_shell_info()
     assert len(info) == 2 and info[0] and info[1]
