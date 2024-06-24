@@ -1,14 +1,16 @@
-from subprocess import Popen
-from subprocess import check_output
-from subprocess import CREATE_NEW_CONSOLE
-from subprocess import CREATE_BREAKAWAY_FROM_JOB
-from subprocess import DETACHED_PROCESS
-from subprocess import DEVNULL
 import time
+from subprocess import (
+    CREATE_BREAKAWAY_FROM_JOB,
+    CREATE_NEW_CONSOLE,
+    DETACHED_PROCESS,
+    DEVNULL,
+    Popen,
+    check_output,
+)
 
 
 def run_process(start_cmd, flags=0, output_file=None):
-    pkwargs ={}
+    pkwargs = {}
     if output_file:
         fo = open(output_file, "w")
         pkwargs['stdout'] = fo
@@ -24,19 +26,19 @@ def run_process(start_cmd, flags=0, output_file=None):
 def print_output(output_file):
     time.sleep(1)
     print(f"print of file {output_file}:")
-    with open(output_file, "r") as f:
+    with open(output_file) as f:
         for idx, l in enumerate(f):
-            print(f"{(idx+1):3}:{l}",end="")
+            print(f"{(idx+1):3}:{l}", end="")
     print(f"End of file ({output_file})\n")
 
 
 def run(idx, cmd, flags):
     f = f"output{idx}.txt"
     try:
-        print(f"------------------------------------------")
+        print("------------------------------------------")
         print(f"Executing command {idx}:'{cmd}' with flags={flags}")
         run_process(["cmd.exe", "/c", cmd], flags=flags, output_file=f)
-        print(f"command successful!")
+        print("command successful!")
         print_output(f)
     except Exception as e:
         print(f"error running '{cmd}'")
@@ -51,9 +53,12 @@ run(4, "echo flag=detach", flags=DETACHED_PROCESS)
 
 print("------------------------------------------")
 print("Check for BREAKAWAY flag support")
-cmd = ["python", "-c",
-               "import subprocess; subprocess.Popen(['cmd.exe', '/C'], close_fds=True, \
-               creationflags=subprocess.CREATE_BREAKAWAY_FROM_JOB);print('successful')"]
+cmd = [
+    "python",
+    "-c",
+    "import subprocess; subprocess.Popen(['cmd.exe', '/C'], close_fds=True, \
+               creationflags=subprocess.CREATE_BREAKAWAY_FROM_JOB);print('successful')",
+]
 try:
     output = check_output(cmd).decode('utf8', 'replace').strip()
 except Exception:
