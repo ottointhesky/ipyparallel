@@ -49,7 +49,7 @@ jobs:
             cluster_type: ssh
             runs_on: windows-2019
           - python: "3.9"
-            runs_on: macos-11
+            runs_on: macos-12
           - python: "3.11"
 
     steps:
