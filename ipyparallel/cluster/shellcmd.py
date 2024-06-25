@@ -607,6 +607,7 @@ class ShellCommandSend:
     def _check_for_break_away_flag(self):
         assert self.platform == Platform.Windows  # test only relevant for windows
         assert self.python_path is not None
+        # py_code = "import subprocess; subprocess.Popen(['cmd.exe', '/C'], close_fds=True, creationflags=subprocess.CREATE_BREAKAWAY_FROM_JOB); raise PermissionError('[WinError 5] Access is denied'); print('successful')"
         py_code = "import subprocess; subprocess.Popen(['cmd.exe', '/C'], close_fds=True, creationflags=subprocess.CREATE_BREAKAWAY_FROM_JOB); print('successful')"
         cmd = (
             self.shell
@@ -622,9 +623,9 @@ class ShellCommandSend:
             output = self._check_output(cmd).strip()
         except Exception as e:
             warnings.warn(
-                f"Break away check failed: {e!r}",
+                f"Break away test exception: {e!r}",
                 UserWarning,
-                stacklevel=2,
+                stacklevel=4,
             )
             output = ""
 
