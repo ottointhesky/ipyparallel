@@ -20,6 +20,7 @@ import re
 import shlex
 import sys
 import time
+import warnings
 from datetime import datetime
 from random import randint
 from subprocess import CalledProcessError, Popen, TimeoutExpired, check_output
@@ -613,13 +614,18 @@ class ShellCommandSend:
             + [
                 self.python_path,
                 '-c',
-                f'{py_code}',
+                f'"{py_code}"',
             ]
         )
         try:
             # non-zero return code, if break_away test fails
             output = self._check_output(cmd).strip()
-        except Exception:
+        except Exception as e:
+            warnings.warn(
+                f"Break away check failed: {e!r}",
+                UserWarning,
+                stacklevel=2,
+            )
             output = ""
 
         return output == "successful"
