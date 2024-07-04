@@ -22,7 +22,7 @@ senders = [
     (
         "windows",
         ShellCommandSend(
-            ["cmd.exe"], ["/C"], sys.executable, initialize=False, send_receiver_class=1
+            ["cmd.exe"], ["/C"], sys.executable, initialize=False, send_receiver_code=1
         ),
     ),
     (
@@ -38,7 +38,7 @@ senders = [
             ["-Command"],
             sys.executable,
             initialize=False,
-            send_receiver_class=1,
+            send_receiver_code=1,
         ),
     ),
     (
@@ -57,13 +57,13 @@ senders = [
             ["-p", "2222", "ciuser@127.0.0.1"],
             windows_py_path,
             initialize=False,
-            send_receiver_class=1,
+            send_receiver_code=1,
         ),
     ),
     (
         "wsl",
         ShellCommandSend(
-            ["bash"], ["-c"], "python3", initialize=False, send_receiver_class=1
+            ["bash"], ["-c"], "python3", initialize=False, send_receiver_code=1
         ),
     ),
     ("linux", ShellCommandSend(["/usr/bin/bash"], ["-c"], "python3", initialize=False)),
@@ -74,7 +74,7 @@ senders = [
             ["-c"],
             "python3",
             initialize=False,
-            send_receiver_class=1,
+            send_receiver_code=1,
         ),
     ),
     (
@@ -90,14 +90,14 @@ senders = [
             ["-p", "2222", "ciuser@127.0.0.1"],
             linux_py_path,
             initialize=False,
-            send_receiver_class=1,
+            send_receiver_code=1,
         ),
     ),
     ("macos", ShellCommandSend(["/bin/bash"], ["-c"], "python3", initialize=False)),
     (
         "macos",
         ShellCommandSend(
-            ["/bin/bash"], ["-c"], "python3", initialize=False, send_receiver_class=1
+            ["/bin/bash"], ["-c"], "python3", initialize=False, send_receiver_code=1
         ),
     ),
 ]
@@ -128,10 +128,9 @@ def shellcmd_test_cmd():
     """returns a command that runs for 5 seconds"""
     test_command = {}
     test_command["windows"] = 'ping -n 5 127.0.0.1'
-    test_command["linux"] = (
+    test_command["posix"] = (
         'ping -c 5 127.0.0.1'  # ping needs to be installed to the standard ubuntu docker image
     )
-    test_command["macos"] = 'ping -c 5 127.0.0.1'
     return test_command
 
 
@@ -160,11 +159,9 @@ def test_shellcmds(platform, sender, shellcmd_test_cmd, ssh_running):
         elif platform != "windows":
             pytest.skip("other platform")
 
-    elif Platform.get() == Platform.Linux:
-        if platform != "linux":
-            pytest.skip("other platform")
-    elif Platform.get() == Platform.MacOS:
-        if platform != "macos":
+    else:
+        # posix platform
+        if platform != "linux" or platform != "macos":
             pytest.skip("other platform")
 
     if 'ssh' in sender.shell and not ssh_running:
