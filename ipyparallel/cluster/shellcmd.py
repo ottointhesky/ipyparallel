@@ -20,6 +20,7 @@ import re
 import shlex
 import sys
 import time
+import warnings
 from datetime import datetime
 from random import randint
 from subprocess import CalledProcessError, Popen, TimeoutExpired, check_output
@@ -606,7 +607,8 @@ class ShellCommandSend:
     def _check_for_break_away_flag(self):
         assert self.platform == Platform.Windows  # test only relevant for windows
         assert self.python_path is not None
-        py_code = "import subprocess; subprocess.Popen(['cmd.exe', '/C'], close_fds=True, creationflags=subprocess.CREATE_BREAKAWAY_FROM_JOB)"
+        # py_code = "import subprocess; subprocess.Popen(['cmd.exe', '/C'], close_fds=True, creationflags=subprocess.CREATE_BREAKAWAY_FROM_JOB); raise PermissionError('[WinError 5] Access is denied'); print('successful')"
+        py_code = "import subprocess; subprocess.Popen(['cmd.exe', '/C'], close_fds=True, creationflags=subprocess.CREATE_BREAKAWAY_FROM_JOB); print('successful')"
         cmd = (
             self.shell
             + self.args
@@ -618,11 +620,16 @@ class ShellCommandSend:
         )
         try:
             # non-zero return code, if break_away test fails
-            self._check_output(cmd).strip()
-        except Exception:
-            return False
+            output = self._check_output(cmd).strip()
+        except Exception as e:
+            warnings.warn(
+                f"Break away test exception: {e!r}",
+                UserWarning,
+                stacklevel=4,
+            )
+            output = ""
 
-        return True
+        return output == "successful"
 
     def initialize(self):
         """initialize necessary variables by sending an echo command that works on all OS and shells"""

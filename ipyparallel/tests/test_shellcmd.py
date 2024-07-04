@@ -1,6 +1,7 @@
 """test shell command classes"""
 
 import json
+import os
 import signal
 import sys
 import time
@@ -154,8 +155,8 @@ def test_shellcmds(platform, sender, shellcmd_test_cmd, ssh_running):
     prefix = ""
     if Platform.get() == Platform.Windows:
         if platform == "wsl":
-            # pytest.skip("wsl deactivated")  # comment to activate wsl tests
-            prefix = "/home/johannes/"
+            pytest.skip("wsl deactivated")  # comment to activate wsl tests
+            prefix = "/home/" + os.environ["USERNAME"] + "/"
         elif platform != "windows":
             pytest.skip("other platform")
 
@@ -175,13 +176,14 @@ def test_shellcmds(platform, sender, shellcmd_test_cmd, ssh_running):
     sender.initialize()
 
     if not sender.breakaway_support:
-        with pytest.warns(UserWarning):
-            warnings.warn(
-                "Break away process creation flag is not available (known issue for Github Runners)",
-                UserWarning,
-            )
+        warnings.warn(
+            "Break away process creation flag is not available (known issue for Github Runners)",
+            UserWarning,
+            stacklevel=2,
+        )
 
-    # sender.break_away_support = False  # just for testing
+    # if Platform.get() == Platform.Windows:
+    #    sender.breakaway_support = False  # just for testing
 
     info = sender.get_shell_info()
     assert len(info) == 2 and info[0] and info[1]
