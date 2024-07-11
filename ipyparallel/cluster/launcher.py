@@ -1325,7 +1325,7 @@ class SSHLauncher(LocalProcessLauncher):
         )
         if self.log:
             remote_cmd = ' '.join(self.program + self.program_args)
-            self.log.info(f"Running `{remote_cmd}`")
+            self.log.info(f"Running `{remote_cmd}` (pid={self.pid})")
             # self.log.debug("Running script via ssh:\n%s", input_script)
             pass
         self.notify_start({'host': self.location, 'pid': self.pid})

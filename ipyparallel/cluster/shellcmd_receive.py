@@ -15,6 +15,7 @@ import pathlib
 import shutil
 import sys
 from abc import ABCMeta, abstractmethod
+from contextlib import contextmanager
 from datetime import datetime
 from random import randint
 from subprocess import DEVNULL, Popen
@@ -37,15 +38,23 @@ class Platform(enum.Enum):
 
 
 class SimpleLog:
+    """Simple file logging class
+
+    In case commands are not working correctly on the receiver side, it can tricky to find the problem
+    especially in case of github runners. Activating the debugging flag on the ShellCommandSend object
+    will trigger writting such a log on the receiver side.
+    """
+
     def __init__(self, filename):
         userdir = str(pathlib.Path.home())
         self.filename = filename.replace(
             "${userdir}", userdir
         )  # replace possible ${userdir} placeholder
+        self.file = open(self.filename, "a")
 
     def _output_msg(self, level, msg):
-        with open(self.filename, "a") as f:
-            f.write(f"{level:8} {datetime.now()} {msg}\n")
+        self.file.write(f"{level:8} {datetime.now()} {msg}\n")
+        self.file.flush()
 
     def info(self, msg):
         self._output_msg("info", msg)
@@ -84,10 +93,8 @@ class ShellCommandReceiveBase(metaclass=ABCMeta):
         self.debugging = debugging
         self.log = None
         if log:
-            if isinstance(log, str):
-                self.log = SimpleLog(log)
-            else:
-                self.log = log
+            assert isinstance(log, str)
+            self.log = SimpleLog(log)
         elif "SHELLCMD_LOG" in os.environ:
             self.log = SimpleLog(os.environ["SHELLCMD_LOG"])
 
@@ -96,9 +103,10 @@ class ShellCommandReceiveBase(metaclass=ABCMeta):
             self.ranid = randint(0, 999)
             self._log("ShellCommandReceiveBase instance created")
 
-    def __del__(self):
+    def close(self):
+        # perform possible clean up actions (currently not required)
         if self.log:
-            self._log("ShellCommandReceiveBase instance deleted")
+            self._log("ShellCommandReceiveBase closed")
 
     def _prepare_cmd_start(self, start_cmd, env):
         if env:
@@ -288,9 +296,14 @@ class ShellCommandReceivePosix(ShellCommandReceiveBase):
         os.kill(pid, sig)
 
 
+@contextmanager
 def ShellCommandReceive(debugging=False, use_breakaway=True, log=None):
-    """Factory function returning the corresponding platform dependent ShellCommandReceive object"""
+    """Generator returning the corresponding platform dependent ShellCommandReceive object (as Context Manager)"""
     if Platform.get() == Platform.Windows:
-        return ShellCommandReceiveWindows(debugging, use_breakaway, log)
+        receiver = ShellCommandReceiveWindows(debugging, use_breakaway, log)
     else:
-        return ShellCommandReceivePosix(debugging, log)
+        receiver = ShellCommandReceivePosix(debugging, log)
+    try:
+        yield receiver
+    finally:
+        receiver.close()
