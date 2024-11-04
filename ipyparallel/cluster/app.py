@@ -11,7 +11,6 @@ import signal
 import sys
 from functools import partial
 
-import entrypoints
 import zmq
 from IPython.core.profiledir import ProfileDir
 from traitlets import Bool, CaselessStrEnum, Dict, Integer, List, default
@@ -20,6 +19,7 @@ from traitlets.config.application import catch_config_error
 from ipyparallel._version import __version__
 from ipyparallel.apps.baseapp import BaseParallelApplication, base_aliases, base_flags
 from ipyparallel.cluster import Cluster, ClusterManager, clean_cluster_files
+from ipyparallel.traitlets import entry_points
 from ipyparallel.util import abbreviate_profile_dir
 
 # -----------------------------------------------------------------------------
@@ -339,13 +339,14 @@ class IPClusterEngines(BaseParallelApplication):
         launcher_classes = []
         for kind in ('controller', 'engine'):
             group_name = f'ipyparallel.{kind}_launchers'
-            group = entrypoints.get_group_named(group_name)
-            for key, value in group.items():
+            group = entry_points(group=group_name)
+            for entrypoint in group:
+                key = entrypoint.name
                 try:
-                    cls = value.load()
+                    cls = entrypoint.load()
                 except Exception as e:
                     self.log.error(
-                        f"Failed to load entrypoint {group_name}: {key} = {value}\n{e}"
+                        f"Failed to load entrypoint {group_name}: {key} = {entrypoint.value}\n{e}"
                     )
                 else:
                     launcher_classes.append(cls)
@@ -515,7 +516,7 @@ class IPClusterEngines(BaseParallelApplication):
         # First see if the cluster is already running
 
         # Now log and daemonize
-        self.log.info('Starting engines with [daemon=%r]' % self.daemonize)
+        self.log.info(f'Starting engines with [daemon={self.daemonize!r}]')
 
         self.loop.add_callback(self.start_engines)
         # Now write the new pid file AFTER our new forked pid is active.
@@ -606,7 +607,7 @@ class IPClusterStart(IPClusterEngines):
                 self.exit(ALREADY_STARTED)
 
         # Now log and daemonize
-        self.log.info('Starting ipcluster with [daemonize=%r]' % self.daemonize)
+        self.log.info(f'Starting ipcluster with [daemonize={self.daemonize!r}]')
 
         self.loop.add_callback(self.start_cluster)
         try:
@@ -693,7 +694,7 @@ class IPClusterNBExtension(BaseParallelApplication):
             print("Disabling IPython clusters tab", file=sys.stderr)
             install_extensions(enable=False, user=self.user)
         else:
-            self.exit("Must specify 'enable' or 'disable', not '%s'" % action)
+            self.exit(f"Must specify 'enable' or 'disable', not '{action}'")
 
 
 class IPCluster(BaseParallelApplication):
@@ -720,7 +721,7 @@ class IPCluster(BaseParallelApplication):
     def start(self):
         if self.subapp is None:
             keys = ', '.join(f"'{key}'" for key in self.subcommands.keys())
-            print("No subcommand specified. Must specify one of: %s" % keys)
+            print(f"No subcommand specified. Must specify one of: {keys}")
             print()
             self.print_description()
             self.print_subcommands()
