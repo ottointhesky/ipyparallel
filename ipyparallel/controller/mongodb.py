@@ -11,10 +11,11 @@ try:
 except ImportError:
     from bson import Binary
 
+from datetime import datetime, timezone
+
 from traitlets import Dict, Instance, List, Unicode
 
 from .dictdb import BaseDB
-from datetime import datetime, timezone
 
 # we need to determine the pymongo version because of API changes. see
 # https://pymongo.readthedocs.io/en/stable/migrate-to-pymongo4.html
@@ -25,10 +26,12 @@ pymongo_version_minor = int(version.split('.')[1])
 # MongoDB class
 # -----------------------------------------------------------------------------
 
+
 def _ensure_utc(obj):
     if isinstance(obj, datetime):
         obj = obj.replace(tzinfo=timezone.utc)
     return obj
+
 
 def _ensure_utc_for_record(rec):
     for key in ('submitted', 'started', 'completed', 'received'):
