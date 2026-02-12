@@ -16,11 +16,6 @@ from traitlets import Dict, Instance, List, Unicode
 from .dictdb import BaseDB
 from bson.codec_options import CodecOptions
 
-# we need to determine the pymongo version because of API changes. see
-# https://pymongo.readthedocs.io/en/stable/migrate-to-pymongo4.html
-pymongo_version_major = int(version.split('.')[0])
-pymongo_version_minor = int(version.split('.')[1])
-
 # -----------------------------------------------------------------------------
 # MongoDB class
 # -----------------------------------------------------------------------------
@@ -54,6 +49,14 @@ class MongoDB(BaseDB):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+
+        # make sure that pymongo version is at least 4.x because of API changes. see
+        # https://pymongo.readthedocs.io/en/stable/migrate-to-pymongo4.html
+        # for more details
+        pymongo_version_major = int(version.split('.')[0])
+        if pymongo_version_major < 4:
+            raise Exception(f"pymongo package too old (current version={version}). Please update to version 4.0 or higher")
+        
         if self._connection is None:
             self._connection = MongoClient(
                 *self.connection_args, **self.connection_kwargs
@@ -64,16 +67,8 @@ class MongoDB(BaseDB):
         self._db = self._connection[self.database]
         self._records = self._db.get_collection("task_records", options)
         #self._records = self._db['task_records']
-
-        if pymongo_version_major >= 4:
-            # mimic the old API 3.x
-            self._records.insert = self._records.insert_one
-            self._records.update = self._records.update_one
-            self._records.ensure_index = self._records.create_index
-            self._records.remove = self._records.delete_many
-
-        self._records.ensure_index('msg_id', unique=True)
-        self._records.ensure_index('submitted')  # for sorting history
+        self._records.create_index('msg_id', unique=True)
+        self._records.create_index('submitted')  # for sorting history
         # for rec in self._records.find
 
     def _binary_buffers(self, rec):
@@ -86,7 +81,7 @@ class MongoDB(BaseDB):
         """Add a new Task Record, by msg_id."""
         # print rec
         rec = self._binary_buffers(rec)
-        self._records.insert(rec)
+        self._records.insert_one(rec)
 
     def get_record(self, msg_id):
         """Get a specific Task Record, by msg_id."""
@@ -100,15 +95,15 @@ class MongoDB(BaseDB):
         """Update the data in an existing record."""
         rec = self._binary_buffers(rec)
 
-        self._records.update({'msg_id': msg_id}, {'$set': rec})
+        self._records.update_one({'msg_id': msg_id}, {'$set': rec})
 
     def drop_matching_records(self, check):
         """Remove a record from the DB."""
-        self._records.remove(check)
+        self._records.delete_many(check)
 
     def drop_record(self, msg_id):
         """Remove a record from the DB."""
-        self._records.remove({'msg_id': msg_id})
+        self._records.delete_many({'msg_id': msg_id})
 
     def find_records(self, check, keys=None):
         """Find records matching a query dict, optionally extracting subset of keys.
