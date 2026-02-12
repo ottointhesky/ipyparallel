@@ -44,8 +44,8 @@ jobs:
           #    IPP_ENABLE_CURVE: "1"
           - python: "3.10"
             runs_on: windows-2025
-          #- python: "3.12"
-          #  runs_on: macos-14
+          - python: "3.12"
+            runs_on: macos-14
           - python: "3.11"
           #- python: "3.14"
           #  pre: pre
