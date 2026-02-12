@@ -1,7 +1,6 @@
 name: Test ssh
 
 on:
-  workflow_dispatch
   #pull_request:
   #  paths:
   #    - ipyparallel/cluster/launcher.py
@@ -20,6 +19,7 @@ on:
   #    - .github/workflows/test-ssh.yml
   #  branches-ignore:
   #    - "pre-commit-ci*"
+  workflow_dispatch:
 
 concurrency:
   group: >-

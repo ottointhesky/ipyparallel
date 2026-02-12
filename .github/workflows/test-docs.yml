@@ -1,7 +1,6 @@
 name: Test docs
 
 on:
-  workflow_dispatch
   #pull_request:
   #push:
   #  branches-ignore:
@@ -9,7 +8,7 @@ on:
   #    - "pre-commit-ci-update-config"
   #  tags:
   #    - "**"
-  #workflow_dispatch:
+  workflow_dispatch:
 
 env:
   # UTF-8 content may be interpreted as ascii and causes errors without this.
