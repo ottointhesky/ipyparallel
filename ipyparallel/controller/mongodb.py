@@ -11,10 +11,10 @@ try:
 except ImportError:
     from bson import Binary
 
+from bson.codec_options import CodecOptions
 from traitlets import Dict, Instance, List, Unicode
 
 from .dictdb import BaseDB
-from bson.codec_options import CodecOptions
 
 # -----------------------------------------------------------------------------
 # MongoDB class
@@ -55,7 +55,9 @@ class MongoDB(BaseDB):
         # for more details
         pymongo_version_major = int(version.split('.')[0])
         if pymongo_version_major < 4:
-            raise Exception(f"pymongo package too old (current version={version}). Please update to version 4.0 or higher")
+            raise Exception(
+                f"pymongo package too old (current version={version}). Please update to version 4.0 or higher"
+            )
 
         if self._connection is None:
             self._connection = MongoClient(
@@ -66,7 +68,7 @@ class MongoDB(BaseDB):
         options = CodecOptions(tz_aware=True)
         self._db = self._connection[self.database]
         self._records = self._db.get_collection("task_records", options)
-        #self._records = self._db['task_records']
+        # self._records = self._db['task_records']
         self._records.create_index('msg_id', unique=True)
         self._records.create_index('submitted')  # for sorting history
         # for rec in self._records.find
