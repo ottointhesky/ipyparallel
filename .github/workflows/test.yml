@@ -139,6 +139,15 @@ jobs:
         if: ${{ startsWith(matrix.runs_on, 'ubuntu') }} 
         run: pip install pymongo
 
+      - name: Try connecting to mongodb
+        if: ${{ startsWith(matrix.runs_on, 'ubuntu') }}
+        run: |
+          python3 <<EOF
+          from pymongo import MongoClient
+          client = MongoClient('mongodb://localhost:27017/',serverSelectionTimeoutMS=1)
+          print(client.server_info())
+          EOF
+
       - name: Show environment
         run: pip freeze
 
