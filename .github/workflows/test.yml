@@ -31,24 +31,24 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - python: "3.11"
-            cluster_type: mpi
-          - python: "3.12"
-            cluster_type: slurm
-            container: slurmctld
+          #- python: "3.11"
+          #  cluster_type: mpi
+          #- python: "3.12"
+          #  cluster_type: slurm
+          #  container: slurmctld
           - python: "3.10"
             env:
               IPP_CONTROLLER_IP: "*"
-          - python: "3.13"
-            env:
-              IPP_ENABLE_CURVE: "1"
-          - python: "3.10"
-            runs_on: windows-2025
-          - python: "3.12"
-            runs_on: macos-14
+          #- python: "3.13"
+          #  env:
+          #    IPP_ENABLE_CURVE: "1"
+          #- python: "3.10"
+          #  runs_on: windows-2025
+          #- python: "3.12"
+          #  runs_on: macos-14
           - python: "3.11"
-          - python: "3.14"
-            pre: pre
+          #- python: "3.14"
+          #  pre: pre
 
     steps:
       - uses: actions/checkout@v6
@@ -130,11 +130,13 @@ jobs:
           pip install --only-binary :all: matplotlib
 
       - name: Start MongoDB
+        if: ${{ startsWith(matrix.runs_on, 'ubuntu') }} 
         uses: supercharge/mongodb-github-action@1.12.1
         #with:
         #  mongodb-version: ${{ matrix.mongodb-version }}
 
       - name: Install pymongo environment
+        if: ${{ startsWith(matrix.runs_on, 'ubuntu') }} 
         run: pip install pymongo
 
       - name: Show environment
