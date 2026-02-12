@@ -1,7 +1,7 @@
 name: Test ssh
 
 on:
-  workflow_dispatch:
+  workflow_dispatch
   #pull_request:
   #  paths:
   #    - ipyparallel/cluster/launcher.py
