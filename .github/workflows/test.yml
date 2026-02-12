@@ -129,6 +129,14 @@ jobs:
           pip install distributed joblib
           pip install --only-binary :all: matplotlib
 
+      - name: Start MongoDB
+        uses: supercharge/mongodb-github-action@1.12.1
+        #with:
+        #  mongodb-version: ${{ matrix.mongodb-version }}
+
+      - name: Install pymongo environment
+        run: pip install pymongo
+
       - name: Show environment
         run: pip freeze
 
