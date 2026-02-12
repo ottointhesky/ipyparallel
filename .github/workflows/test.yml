@@ -130,17 +130,17 @@ jobs:
           pip install --only-binary :all: matplotlib
 
       - name: Start MongoDB
-        if: ${{ startsWith(matrix.runs_on, 'ubuntu') }} 
+        if: ${{ contains(matrix.runs_on, 'ubuntu') }}
         uses: supercharge/mongodb-github-action@1.12.1
         #with:
         #  mongodb-version: ${{ matrix.mongodb-version }}
 
       - name: Install pymongo environment
-        if: ${{ startsWith(matrix.runs_on, 'ubuntu') }} 
+        if: ${{ contains(matrix.runs_on, 'ubuntu') }}
         run: pip install pymongo
 
       - name: Try connecting to mongodb
-        if: ${{ startsWith(matrix.runs_on, 'ubuntu') }}
+        if: ${{ contains(matrix.runs_on, 'ubuntu') }}
         run: |
           python3 <<EOF
           from pymongo import MongoClient
