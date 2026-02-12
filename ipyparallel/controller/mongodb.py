@@ -11,10 +11,10 @@ try:
 except ImportError:
     from bson import Binary
 
+from bson.codec_options import CodecOptions
 from traitlets import Dict, Instance, List, Unicode
 
 from .dictdb import BaseDB
-from bson.codec_options import CodecOptions
 
 # we need to determine the pymongo version because of API changes. see
 # https://pymongo.readthedocs.io/en/stable/migrate-to-pymongo4.html
@@ -63,7 +63,7 @@ class MongoDB(BaseDB):
         options = CodecOptions(tz_aware=True)
         self._db = self._connection[self.database]
         self._records = self._db.get_collection("task_records", options)
-        #self._records = self._db['task_records']
+        # self._records = self._db['task_records']
 
         if pymongo_version_major >= 4:
             # mimic the old API 3.x
