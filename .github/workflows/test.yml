@@ -129,15 +129,15 @@ jobs:
           pip install --only-binary :all: matplotlib
 
       - name: Start MongoDB
-        if: ${{ (! matrix.runs_on) && matrix.cluster_type != 'slurm' }} # only under linux/ubuntu
+        if: ${{ (! matrix.runs_on) && (matrix.cluster_type != 'slurm') }} # only under linux/ubuntu
         uses: supercharge/mongodb-github-action@1.12.1  # uses latest mongodb per default
 
       - name: Install pymongo package
-        if: ${{ (! matrix.runs_on) && matrix.cluster_type != 'slurm' }} # only under linux/ubuntu
+        if: ${{ (! matrix.runs_on) && (matrix.cluster_type != 'slurm') }} # only under linux/ubuntu
         run: pip install pymongo
 
       - name: Try to connect to mongodb
-        if: ${{ (! matrix.runs_on) && matrix.cluster_type != 'slurm' }} # only under linux/ubuntu
+        if: ${{ (! matrix.runs_on) && (matrix.cluster_type != 'slurm') }} # only under linux/ubuntu
         run: |
           python3 <<EOF
           from pymongo import MongoClient
