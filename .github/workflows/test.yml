@@ -6,6 +6,7 @@ on:
     branches-ignore:
       - "pre-commit-ci*"
       - "dependabot/**"
+  workflow_dispatch:
 
 concurrency:
   group: >-

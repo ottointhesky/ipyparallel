@@ -19,6 +19,7 @@ on:
       - .github/workflows/test-ssh.yml
     branches-ignore:
       - "pre-commit-ci*"
+  workflow_dispatch:
 
 concurrency:
   group: >-
