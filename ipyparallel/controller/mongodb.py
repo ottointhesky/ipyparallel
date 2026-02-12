@@ -15,6 +15,7 @@ except ImportError:
 from traitlets import Dict, Instance, List, Unicode
 
 from .dictdb import BaseDB
+from datetime import datetime, timezone
 
 # we need to determine the pymongo version because of API changes. see
 # https://pymongo.readthedocs.io/en/stable/migrate-to-pymongo4.html
@@ -24,6 +25,16 @@ pymongo_version_minor = int(version.split('.')[1])
 # -----------------------------------------------------------------------------
 # MongoDB class
 # -----------------------------------------------------------------------------
+
+def _ensure_utc(obj):
+    if isinstance(obj, datetime):
+        obj = obj.replace(tzinfo=timezone.utc)
+    return obj
+
+def _ensure_utc_for_record(rec):
+    for key in ('submitted', 'started', 'completed', 'received'):
+        if key in rec:
+            rec[key] = _ensure_utc(rec[key])
 
 
 class MongoDB(BaseDB):
@@ -91,6 +102,7 @@ class MongoDB(BaseDB):
         if not r:
             # r will be '' if nothing is found
             raise KeyError(msg_id)
+        _ensure_utc_for_record(r)
         return r
 
     def update_record(self, msg_id, rec):
@@ -125,6 +137,7 @@ class MongoDB(BaseDB):
         matches = list(self._records.find(check, keys))
         for rec in matches:
             rec.pop('_id')
+            _ensure_utc_for_record(rec)
         return matches
 
     def get_history(self):
