@@ -56,7 +56,7 @@ class MongoDB(BaseDB):
         pymongo_version_major = int(version.split('.')[0])
         if pymongo_version_major < 4:
             raise Exception(f"pymongo package too old (current version={version}). Please update to version 4.0 or higher")
-        
+
         if self._connection is None:
             self._connection = MongoClient(
                 *self.connection_args, **self.connection_kwargs
