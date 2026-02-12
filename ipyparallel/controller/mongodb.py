@@ -94,7 +94,6 @@ class MongoDB(BaseDB):
         if not r:
             # r will be '' if nothing is found
             raise KeyError(msg_id)
-        _ensure_utc_for_record(r)
         return r
 
     def update_record(self, msg_id, rec):
