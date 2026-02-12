@@ -1,11 +1,12 @@
 name: Test
 
 on:
-  pull_request:
-  push:
-    branches-ignore:
-      - "pre-commit-ci*"
-      - "dependabot/**"
+  workflow_dispatch:
+  #pull_request:
+  #push:
+  #  branches-ignore:
+  #    - "pre-commit-ci*"
+  #    - "dependabot/**"
 
 concurrency:
   group: >-
