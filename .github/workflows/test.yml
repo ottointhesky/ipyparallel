@@ -33,9 +33,9 @@ jobs:
         include:
           #- python: "3.11"
           #  cluster_type: mpi
-          #- python: "3.12"
-          #  cluster_type: slurm
-          #  container: slurmctld
+          - python: "3.12"
+            cluster_type: slurm
+            container: slurmctld
           - python: "3.10"
             env:
               IPP_CONTROLLER_IP: "*"
@@ -128,6 +128,18 @@ jobs:
         run: |
           pip install distributed joblib
           pip install --only-binary :all: matplotlib
+
+      - name: Is ubuntu
+        if: ${{ ! matrix.runs_on }}
+        run: echo "is ubuntu"
+
+      - name: Is not slurm 
+        if: ${{ matrix.cluster_type != 'slurm' }}
+        run: echo "is not slurm"
+
+      - name: Is ubuntu and not slurm
+        if: ${{ (! matrix.runs_on) && (matrix.cluster_type != 'slurm')}}
+        run: echo "Is ubuntu and not slurm"
 
       - name: Start MongoDB
         if: ${{ ! matrix.runs_on }} # only under linux/ubuntu
