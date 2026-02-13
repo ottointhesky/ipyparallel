@@ -84,6 +84,22 @@ jobs:
                   f.write(f"{key}={value}\n")
           EOF
 
+      - name: Is ubuntu
+        if: ${{ ! matrix.runs_on }}
+        run: echo "is ubuntu"
+
+      - name: Is not slurm 
+        if: ${{ matrix.cluster_type != 'slurm' }}
+        run: echo "is not slurm"
+
+      - name: Is ubuntu and not slurm
+        if: ${{ (! matrix.runs_on) && (matrix.cluster_type != 'slurm') }}
+        run: echo "Is ubuntu and not slurm"
+
+      - name: Disable mongodb
+        if: ${{ ! matrix.disable_mongodb }}
+        run: echo "mongodb disabled"
+
       - name: Set up slurm
         if: ${{ matrix.cluster_type == 'slurm' }}
         run: |
@@ -129,22 +145,6 @@ jobs:
         run: |
           pip install distributed joblib
           pip install --only-binary :all: matplotlib
-
-      - name: Is ubuntu
-        if: ${{ ! matrix.runs_on }}
-        run: echo "is ubuntu"
-
-      - name: Is not slurm 
-        if: ${{ matrix.cluster_type != 'slurm' }}
-        run: echo "is not slurm"
-
-      - name: Is ubuntu and not slurm
-        if: ${{ (! matrix.runs_on) && (matrix.cluster_type != 'slurm') }}
-        run: echo "Is ubuntu and not slurm"
-
-      - name: Disable mongodb
-        if: ${{ ! matrix.disable_mongodb }}
-        run: echo "mongodb disabled"
 
       - name: Start MongoDB
         if: ${{ ! matrix.disable_mongodb }} # only under linux/ubuntu
