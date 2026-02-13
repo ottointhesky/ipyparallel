@@ -84,11 +84,14 @@ jobs:
 
       - name: Set up slurm
         if: ${{ matrix.cluster_type == 'slurm' }}
+        # docker build can lead to race condition -> image "docker.io/library/ipp-cluster:slurm": already exists
+        # see https://github.com/mlflow/mlflow/pull/20779
+        # work-a-round fix: docker compose again if first call failed 
         run: |
           export DOCKER_BUILDKIT=1
           export COMPOSE_DOCKER_CLI_BUILD=1
           cd ci/slurm
-          docker compose up -d --build
+          docker compose up -d --build || docker compose up -d --build
 
       - name: Install Python (conda) ${{ matrix.python }}
         if: ${{ matrix.cluster_type == 'mpi' }}
