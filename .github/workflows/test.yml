@@ -36,7 +36,6 @@ jobs:
           - python: "3.12"
             cluster_type: slurm
             container: slurmctld
-            disable_mongodb: true
           - python: "3.10"
             env:
               IPP_CONTROLLER_IP: "*"
@@ -96,18 +95,18 @@ jobs:
         if: ${{ (! matrix.runs_on) && (matrix.cluster_type != 'slurm') }}
         run: echo "Is ubuntu and not slurm"
 
-      - name: Disable mongodb
-        if: ${{ ! matrix.disable_mongodb }}
-        run: echo "mongodb disabled"
+      - name: Is mongodb disabled
+        if: ${{ (! matrix.runs_on) && (matrix.cluster_type != 'slurm') }}
+        run: echo "mongodb is disabled"
 
       - name: Set up slurm
         if: ${{ matrix.cluster_type == 'slurm' }}
         # Fix Docker build race condition -> https://github.com/mlflow/mlflow/pull/20779
         run: |
-          export DOCKER_BUILDKIT=0
+          export DOCKER_BUILDKIT=1
           export COMPOSE_DOCKER_CLI_BUILD=1
           cd ci/slurm
-          docker compose up -d --build
+          docker compose up -d --build || docker compose up -d --build
 
       - name: Install Python (conda) ${{ matrix.python }}
         if: ${{ matrix.cluster_type == 'mpi' }}
@@ -148,17 +147,17 @@ jobs:
           pip install --only-binary :all: matplotlib
 
       - name: Start MongoDB
-        if: ${{ ! matrix.disable_mongodb }} # only under linux/ubuntu
+        if: ${{ (! matrix.runs_on) && (matrix.cluster_type != 'slurm') }} # only under linux/ubuntu
         uses: supercharge/mongodb-github-action@1.12.1
         #with:
         #  mongodb-version: ${{ matrix.mongodb-version }}
 
       - name: Install pymongo package
-        if: ${{ ! matrix.disable_mongodb }} # only under linux/ubuntu
+        if: ${{ (! matrix.runs_on) && (matrix.cluster_type != 'slurm') }} # only under linux/ubuntu
         run: pip install pymongo
 
       - name: Try to connect to mongodb
-        if: ${{ ! matrix.disable_mongodb }} # only under linux/ubuntu
+        if: ${{ (! matrix.runs_on) && (matrix.cluster_type != 'slurm') }} # only under linux/ubuntu
         run: |
           python3 <<EOF
           from pymongo import MongoClient
