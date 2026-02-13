@@ -104,7 +104,7 @@ jobs:
         if: ${{ matrix.cluster_type == 'slurm' }}
         # Fix Docker build race condition -> https://github.com/mlflow/mlflow/pull/20779
         run: |
-		  export DOCKER_BUILDKIT=0	
+          export DOCKER_BUILDKIT=0
           export COMPOSE_DOCKER_CLI_BUILD=1
           cd ci/slurm
           docker compose up -d --build
