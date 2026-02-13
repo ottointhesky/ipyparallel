@@ -36,6 +36,7 @@ jobs:
           - python: "3.12"
             cluster_type: slurm
             container: slurmctld
+            disable_mongodb: true
           - python: "3.10"
             env:
               IPP_CONTROLLER_IP: "*"
@@ -141,18 +142,22 @@ jobs:
         if: ${{ (! matrix.runs_on) && (matrix.cluster_type != 'slurm') }}
         run: echo "Is ubuntu and not slurm"
 
+      - name: Disable mongodb
+        if: ${{ ! matrix.disable_mongodb }}
+        run: echo "mongodb disabled"
+
       - name: Start MongoDB
-        if: ${{ (! matrix.runs_on) && (matrix.cluster_type != 'slurm') }} # only under linux/ubuntu
+        if: ${{ ! matrix.disable_mongodb }} # only under linux/ubuntu
         uses: supercharge/mongodb-github-action@1.12.1
         #with:
         #  mongodb-version: ${{ matrix.mongodb-version }}
 
       - name: Install pymongo package
-        if: ${{ (! matrix.runs_on) && (matrix.cluster_type != 'slurm') }} # only under linux/ubuntu
+        if: ${{ ! matrix.disable_mongodb }} # only under linux/ubuntu
         run: pip install pymongo
 
       - name: Try to connect to mongodb
-        if: ${{ (! matrix.runs_on) && (matrix.cluster_type != 'slurm') }} # only under linux/ubuntu
+        if: ${{ ! matrix.disable_mongodb }} # only under linux/ubuntu
         run: |
           python3 <<EOF
           from pymongo import MongoClient
