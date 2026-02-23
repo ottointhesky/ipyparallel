@@ -109,14 +109,14 @@ class TestLabelSqliteDB(TaskLabelTest, TestCase):
 
 
 class TestLabelMongoDB(TaskLabelTest, TestCase):
-
     def get_controller_launcher(self):
         class mongoDB(LocalControllerLauncher):
-            database = "mongodb-label-test" # use this database label for testing
-            controller_args = ["--mongodb", f"--MongoDB.database={database}" ]
+            database = "mongodb-label-test"  # use this database label for testing
+            controller_args = ["--mongodb", f"--MongoDB.database={database}"]
 
         try:
             from pymongo import MongoClient
+
             c = MongoClient(serverSelectionTimeoutMS=2000)
             servinfo = c.server_info()  # checks if mongo server is reachable using the default connection parameter
 
