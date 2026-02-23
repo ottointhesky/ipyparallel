@@ -65,7 +65,7 @@ class TaskLabelTest:
 
     def check_labels(self, labels):
         # query database
-        data = self.rc.db_query({'label': {"$nin": ""}}, keys=['msg_id', 'label'])
+        data = self.rc.db_query({'label': {"$nin": [""]}}, keys=['msg_id', 'label'])
         for d in data:
             msg_id = d['msg_id']
             label = d['label']
