@@ -75,6 +75,7 @@ TaskRecord keys:
 | error          | dict        | Python traceback (error message content)                    |
 | stdout         | str         | Stream of stdout data                                       |
 | stderr         | str         | Stream of stderr data                                       |
+| label          | str         | optional user-defined task identifier                       |
 
 MongoDB operators we emulate on all backends:
 
