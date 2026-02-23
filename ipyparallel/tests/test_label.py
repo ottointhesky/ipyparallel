@@ -106,3 +106,25 @@ class TestLabelSqliteDB(TaskLabelTest, TestCase):
             controller_args = ["--sqlitedb"]
 
         return sqliteDB
+
+
+class TestLabelMongoDB(TaskLabelTest, TestCase):
+
+    def get_controller_launcher(self):
+        class mongoDB(LocalControllerLauncher):
+            database = "mongodb-label-test" # use this database label for testing
+            controller_args = ["--mongodb", f"--MongoDB.database={database}" ]
+
+        try:
+            from pymongo import MongoClient
+            c = MongoClient(serverSelectionTimeoutMS=2000)
+            servinfo = c.server_info()  # checks if mongo server is reachable using the default connection parameter
+
+            # make sure that test database is empty
+            db = c[mongoDB.database]
+            records = db.get_collection("task_records")
+            records.delete_many({})
+        except (ImportError, Exception):
+            pytest.skip("Requires mongodb")
+
+        return mongoDB
